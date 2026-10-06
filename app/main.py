@@ -745,6 +745,11 @@ UI_HTML = """<!DOCTYPE html>
   <script>
     let currentConversationId = null;
 
+    function escapeHtml(value) {
+      const entities = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'};
+      return String(value ?? '').replace(/[&<>"']/g, character => entities[character]);
+    }
+
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('bg-indigo-600', 'text-white', 'shadow');
@@ -1282,6 +1287,7 @@ UI_HTML = """<!DOCTYPE html>
         row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
       });
     }
+  </script>
 
   <!-- DUMMY LOGIN MODAL OVERLAY -->
   <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
