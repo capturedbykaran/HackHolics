@@ -8,6 +8,7 @@
 {"id": "KB-BIL-003", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-BIL-004", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-BIL-005", "attempt": 0, "provider": "template:mock", "problems": []}
+{"id": "KB-POL-001-2024", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-POL-001", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-POL-002", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-POL-003", "attempt": 0, "provider": "template:mock", "problems": []}
@@ -20,6 +21,8 @@
 {"id": "KB-API-006", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-API-007", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-API-008", "attempt": 0, "provider": "template:mock", "problems": []}
+{"id": "KB-API-009", "attempt": 0, "provider": "template:mock", "problems": []}
+{"id": "COM-001", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-TS-001", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-TS-002", "attempt": 0, "provider": "template:mock", "problems": []}
 {"id": "KB-TS-003", "attempt": 0, "provider": "template:mock", "problems": []}

@@ -6,7 +6,7 @@
 
 | Path | What it is |
 |---|---|
-| `app/world.py` | World bible: plans, error codes, policies, 38 article specs, 26 ticket specs. Single source of facts |
+| `app/world.py` | World bible: plans, error codes, policies, 41 document specs, 27 ticket specs. Single source of facts |
 | `app/ingest.py` | `ingest_document()`: validate → parse → sanitise → chunk → enrich → embed → upsert → register |
 | `app/store.py` | ChromaDB collection `kb_chunks` + in-memory BM25 index |
 | `app/embeddings.py` | bge-small-en-v1.5 embeddings, ms-marco MiniLM cross-encoder reranker, `EMBEDDER=hash` for tests |
@@ -60,6 +60,9 @@ behaviour can never contradict each other.
 - Version-specific articles: run export (3.x vs 4.2+), API auth (legacy key vs scoped token), webhook signing (SHA1 vs SHA256).
 - 4 outdated tickets that contradict current docs (e.g. TKT-2025-0311 "add a Delay step" vs KB-TS-002).
 - RN-DEP-001 deprecates legacy API keys on 2026-12-01, after the judging date, so it is returned as *upcoming*.
+- KB-POL-001 supersedes KB-POL-001-2024 (30-day window, deprecated 2025-01-01).
+- COM-001: unofficial community advice (authority 5) contradicting official rate-limit guidance.
+- TKT-2026-0220 contains an embedded "ignore previous instructions" refund request (flagged at ingest).
 - 3 angry tickets that needed a human.
 
 **Accounts.** 12 hand-built edge cases with fixed IDs, plus LLM-generated companies validated with

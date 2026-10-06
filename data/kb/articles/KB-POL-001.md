@@ -5,9 +5,9 @@ title: "Refund policy"
 authority_level: 1
 product_versions: "3.x;4.x"
 last_updated: "2026-01-05"
-effective_from: ""
+effective_from: "2025-01-01"
 deprecated_on: ""
-supersedes: ""
+supersedes: "KB-POL-001-2024"
 provenance: "template:mock"
 synthetic: "Y"
 ---

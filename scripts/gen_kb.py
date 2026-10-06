@@ -56,6 +56,10 @@ def md_table(kind: str) -> str:
         rows = ["| Code | Meaning | What to do |", "|---|---|---|"]
         rows += [f"| {c} | {m} | {f} |" for c, m, f in W.ERROR_CODES]
         return "\n".join(rows)
+    if kind == "ENDPOINTS":
+        rows = ["| Method | Path | Scope | Purpose |", "|---|---|---|---|"]
+        rows += [f"| {m} | {path} | {scope} | {purpose} |" for m, path, scope, purpose in W.ENDPOINTS]
+        return "\n".join(rows)
     raise ValueError(kind)
 
 
@@ -131,7 +135,7 @@ def gen_article(spec: dict, prompts: dict) -> dict:
         if text is None:
             text, prov = render_mock(spec), "template:fallback_after_llm_failure"
     meta = article_meta(spec, prov)
-    (ART_DIR / f"{spec['source_id']}.md").write_text(front_matter(meta) + text, encoding="utf-8")
+    (ART_DIR / f"{spec['source_id']}.md").write_text(front_matter(meta) + text, encoding="utf-8", newline="\n")
     return meta
 
 
@@ -166,7 +170,7 @@ def gen_ticket(spec: dict, system: str, user_t: str) -> dict:
         "resolved_at": spec["resolved_at"], **body,
         "needs_human": bool(angry), "outdated": bool(spec.get("outdated")), "provenance": prov,
     }
-    (TKT_DIR / f"{spec['source_id']}.json").write_text(json.dumps(ticket, indent=2), encoding="utf-8")
+    (TKT_DIR / f"{spec['source_id']}.json").write_text(json.dumps(ticket, indent=2), encoding="utf-8", newline="\n")
     return {
         "source_id": spec["source_id"], "doc_type": "ticket", "title": ticket["subject"],
         "authority_level": 4, "product_versions": spec["product_version"], "last_updated": spec["resolved_at"],
@@ -194,9 +198,12 @@ def write_article_plan():
             {"type": "version_variant", "sources": ["KB-API-001", "KB-API-002"], "topic": "API authentication"},
             {"type": "version_variant", "sources": ["KB-API-004", "KB-API-004-3X"], "topic": "webhook signing"},
             {"type": "future_deprecation", "sources": ["RN-DEP-001", "KB-API-002"], "effective_from": "2026-12-01"},
+            {"type": "superseded_policy", "sources": ["KB-POL-001", "KB-POL-001-2024"], "topic": "refund window 14 vs 30 days"},
+            {"type": "low_authority_community", "sources": ["COM-001", "KB-API-003"], "topic": "CF-429 workaround"},
+            {"type": "prompt_injection_in_ticket", "sources": ["TKT-2026-0220"], "topic": "embedded refund instruction"},
         ],
     }
-    (ROOT / "data/article_plan.json").write_text(json.dumps(plan, indent=2), encoding="utf-8")
+    (ROOT / "data/article_plan.json").write_text(json.dumps(plan, indent=2), encoding="utf-8", newline="\n")
 
 
 def main():
