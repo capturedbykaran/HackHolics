@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0205",
+  "intent": "how_to",
+  "product_version": "4.3",
+  "resolved_at": "2026-08-07",
+  "subject": "Slack step cannot post to private channel",
+  "customer_question": "Slack step cannot post to private channel.",
+  "resolution": "Invite the bot with /invite @CloudFlow.",
+  "tags": [
+    "how_to"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

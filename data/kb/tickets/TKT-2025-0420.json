@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2025-0420",
+  "intent": "how_to",
+  "product_version": "4.0",
+  "resolved_at": "2025-12-02",
+  "subject": "How do I export run history in 4.0?",
+  "customer_question": "How do I export run history in 4.0?.",
+  "resolution": "Go to Settings > Data > Export and download CSV.",
+  "tags": [
+    "how_to"
+  ],
+  "needs_human": false,
+  "outdated": true,
+  "provenance": "template:mock"
+}

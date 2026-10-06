@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0212",
+  "intent": "bug",
+  "product_version": "4.2",
+  "resolved_at": "2026-06-02",
+  "subject": "Workflow not triggering on schedule",
+  "customer_question": "Workflow not triggering on schedule.",
+  "resolution": "Workflow was in Draft; published it.",
+  "tags": [
+    "bug"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

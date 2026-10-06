@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0203",
+  "intent": "account",
+  "product_version": "4.2",
+  "resolved_at": "2026-08-18",
+  "subject": "Runs stopped with CF-460",
+  "customer_question": "Runs stopped with CF-460.",
+  "resolution": "Monthly quota reached; customer upgraded to Business.",
+  "tags": [
+    "account"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

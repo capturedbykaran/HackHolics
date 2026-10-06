@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2025-0311",
+  "intent": "bug",
+  "product_version": "4.0",
+  "resolved_at": "2025-12-15",
+  "subject": "Salesforce step keeps failing with CF-503",
+  "customer_question": "Salesforce step keeps failing with CF-503.",
+  "resolution": "Workaround: add a 30 second Delay step before the Salesforce step.",
+  "tags": [
+    "bug"
+  ],
+  "needs_human": false,
+  "outdated": true,
+  "provenance": "template:mock"
+}

@@ -1,0 +1,41 @@
+account_id,company_name,owner_email,plan,status,product_version,created_at
+A1001,Brightline Analytics,brightline.analytics.owner@example.com,Pro,active,4.3,2026-04-10
+A1002,Kestrel Logistics,kestrel.logistics.owner@example.com,Pro,active,4.3,2026-01-31
+A1003,Monsoon Retail Labs,monsoon.retail.labs.owner@example.com,Pro,active,4.3,2025-11-04
+A1004,Harbor & Pine Studio,harbor.pine.studio.owner@example.com,Business,past_due,4.3,2024-12-26
+A1005,Saffron Grid Systems,saffron.grid.systems.owner@example.com,Pro,active,4.2,2025-10-26
+A1006,Northwind Ledger Co,northwind.ledger.co.owner@example.com,Business,active,4.3,2024-12-29
+A1007,Tidewater Robotics,tidewater.robotics.owner@example.com,Pro,active,4.3,2025-02-09
+A1008,Copperleaf Media,copperleaf.media.owner@example.com,Pro,suspended,4.3,2025-04-01
+A1009,Old Fort Textiles,old.fort.textiles.owner@example.com,Business,active,3.8,2025-04-22
+A1010,Pebble Street Bakery,pebble.street.bakery.owner@example.com,Free,active,4.3,2025-04-02
+A1011,Granite Peak Health Tech,granite.peak.health.tech.owner@example.com,Enterprise,active,4.3,2026-04-18
+A1012,Lumen Ferry Tours,lumen.ferry.tours.owner@example.com,Pro,cancelled,4.1,2025-12-20
+A1013,Indigo Vale,indigo.vale.owner@example.com,Pro,active,4.1,2025-09-10
+A1014,Cobalt Orchard,cobalt.orchard.owner@example.com,Business,active,4.3,2026-01-01
+A1015,Quartz Lane,quartz.lane.owner@example.com,Free,active,4.1,2026-04-11
+A1016,Juniper Forge,juniper.forge.owner@example.com,Pro,past_due,4.3,2026-03-30
+A1017,Rivermint,rivermint.owner@example.com,Pro,active,4.3,2024-10-24
+A1018,Silverbirch Ops,silverbirch.ops.owner@example.com,Pro,active,4.3,2025-11-11
+A1019,Banyan Bytes,banyan.bytes.owner@example.com,Free,active,4.3,2025-07-20
+A1020,Coral Arc,coral.arc.owner@example.com,Business,past_due,4.2,2026-03-25
+A1021,Ashgrove Data,ashgrove.data.owner@example.com,Pro,past_due,4.3,2025-08-21
+A1022,Marigold Freight,marigold.freight.owner@example.com,Business,active,4.1,2024-07-25
+A1023,Nimbus Tea Co,nimbus.tea.co.owner@example.com,Business,suspended,4.2,2026-02-19
+A1024,Teakwood Labs,teakwood.labs.owner@example.com,Free,active,4.3,2025-01-07
+A1025,Lotus Relay,lotus.relay.owner@example.com,Pro,active,4.3,2026-04-24
+A1026,Driftwood Desk,driftwood.desk.owner@example.com,Pro,cancelled,4.3,2026-05-30
+A1027,Kite & Compass,kite.compass.owner@example.com,Business,past_due,4.3,2026-01-08
+A1028,Vermilion Health,vermilion.health.owner@example.com,Business,active,3.8,2025-11-05
+A1029,Opal Circuit,opal.circuit.owner@example.com,Free,active,4.3,2025-10-09
+A1030,Sandstone Ops,sandstone.ops.owner@example.com,Free,active,4.3,2025-04-13
+A1031,Glacier Mint,glacier.mint.owner@example.com,Business,active,4.3,2025-05-13
+A1032,Peacock Prints,peacock.prints.owner@example.com,Enterprise,active,4.2,2025-10-18
+A1033,Zephyr Clinics,zephyr.clinics.owner@example.com,Free,active,4.3,2025-06-14
+A1034,Basalt Works,basalt.works.owner@example.com,Pro,active,4.2,2025-12-08
+A1035,Mango Metrics,mango.metrics.owner@example.com,Business,active,4.3,2024-09-26
+A1036,Fernhill Legal,fernhill.legal.owner@example.com,Free,active,4.2,2024-12-23
+A1037,Starling Freight,starling.freight.owner@example.com,Enterprise,past_due,4.2,2024-09-08
+A1038,Cedar Loop,cedar.loop.owner@example.com,Business,active,4.1,2025-07-09
+A1039,Amber Wharf,amber.wharf.owner@example.com,Pro,past_due,4.2,2024-09-16
+A1040,Tamarind Tech,tamarind.tech.owner@example.com,Pro,active,4.2,2024-08-07

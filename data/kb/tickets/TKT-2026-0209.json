@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0209",
+  "intent": "bug",
+  "product_version": "4.3",
+  "resolved_at": "2026-09-25",
+  "subject": "CF-503 on Salesforce after 4.3 upgrade",
+  "customer_question": "CF-503 on Salesforce after 4.3 upgrade.",
+  "resolution": "Re-authorised the connection and enabled Retry on upstream errors.",
+  "tags": [
+    "bug"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

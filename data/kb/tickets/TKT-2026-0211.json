@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0211",
+  "intent": "how_to",
+  "product_version": "4.3",
+  "resolved_at": "2026-07-30",
+  "subject": "How do I paginate runs via API?",
+  "customer_question": "How do I paginate runs via API?.",
+  "resolution": "Use cursor; page size up to 200.",
+  "tags": [
+    "how_to"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

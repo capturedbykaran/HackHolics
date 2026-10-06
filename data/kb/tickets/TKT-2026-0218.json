@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0218",
+  "intent": "account",
+  "product_version": "3.8",
+  "resolved_at": "2026-09-02",
+  "subject": "Should I upgrade from 3.8 to 4.x?",
+  "customer_question": "Should I upgrade from 3.8 to 4.x?.",
+  "resolution": "Yes; legacy keys stop working 2026-12-01; upgrade under Settings > About.",
+  "tags": [
+    "account"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

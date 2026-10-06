@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0213",
+  "intent": "account",
+  "product_version": "4.3",
+  "resolved_at": "2026-08-25",
+  "subject": "Forgot password and reset email not arriving",
+  "customer_question": "Forgot password and reset email not arriving.",
+  "resolution": "Checked spam; reset email resent to registered address.",
+  "tags": [
+    "account"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

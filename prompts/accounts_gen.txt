@@ -1,2 +1,19 @@
-# Owner: C
-# Verbatim accounts generation prompt (deliverable).
+SYSTEM:
+You generate synthetic customer accounts for CloudFlow, a fictional SaaS product. All companies
+are invented. Never use real company names. Output strict JSON only.
+
+USER:
+Return JSON {"accounts": [...]} with exactly {n} objects. Each object has:
+  "company_name": an invented company name (2-3 words, varied industries, Indian and international mix),
+  "plan": one of Free, Pro, Business, Enterprise,
+  "status": one of active, past_due, suspended, cancelled,
+  "product_version": one of 3.8, 4.1, 4.2, 4.3,
+  "usage_level": one of low, medium, high (how much of the plan quota they use),
+  "currency": USD or INR.
+
+Distribution to follow:
+- plan: about 30% Free, 35% Pro, 25% Business, 10% Enterprise
+- status: about 70% active, 15% past_due, 8% suspended, 7% cancelled
+- product_version: about 15% 3.8, rest spread over 4.x with 4.3 most common
+- Free plan accounts are always "active" or "cancelled" (they are never billed).
+Do not include IDs, emails, dates or amounts; code adds those.

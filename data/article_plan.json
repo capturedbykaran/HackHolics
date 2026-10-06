@@ -1,4 +1,1034 @@
 {
-  "_owner": "C",
-  "articles": []
+  "as_of_date": "2026-10-06",
+  "articles": [
+    {
+      "source_id": "KB-GS-001",
+      "doc_type": "article",
+      "category": "getting_started",
+      "title": "Creating your CloudFlow account",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-03-12",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Sign up",
+        "Set up your workspace",
+        "Next steps"
+      ],
+      "must_include": [
+        "Free plan",
+        "24 hours",
+        "4.3"
+      ]
+    },
+    {
+      "source_id": "KB-GS-002",
+      "doc_type": "article",
+      "category": "getting_started",
+      "title": "Building your first workflow",
+      "product_versions": "4.x",
+      "last_updated": "2026-05-20",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Steps",
+        "Limits"
+      ],
+      "must_include": [
+        "Test run",
+        "50 steps",
+        "300 seconds"
+      ]
+    },
+    {
+      "source_id": "KB-GS-003",
+      "doc_type": "article",
+      "category": "getting_started",
+      "title": "Understanding triggers and steps",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-01-15",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Triggers",
+        "Steps"
+      ],
+      "must_include": [
+        "5 minutes",
+        "1 minute",
+        "Webhook"
+      ]
+    },
+    {
+      "source_id": "KB-GS-004",
+      "doc_type": "article",
+      "category": "getting_started",
+      "title": "Inviting team members and managing seats",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-04-02",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Invite people",
+        "Seats"
+      ],
+      "must_include": [
+        "Settings > Members",
+        "Pro 5",
+        "Business 25"
+      ]
+    },
+    {
+      "source_id": "KB-GS-005",
+      "doc_type": "article",
+      "category": "getting_started",
+      "title": "Product versions: 3.x and 4.x",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-08-28",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Which version am I on?",
+        "Main differences",
+        "Upgrading"
+      ],
+      "must_include": [
+        "Settings > About",
+        "3.8",
+        "4.3",
+        "2026-12-01"
+      ]
+    },
+    {
+      "source_id": "KB-BIL-001",
+      "doc_type": "policy",
+      "category": "account_billing",
+      "title": "Plans and limits",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-07-01",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Plan comparison",
+        "What happens at a limit"
+      ],
+      "must_include": [
+        "CF-429",
+        "CF-460",
+        "300",
+        "20,000"
+      ]
+    },
+    {
+      "source_id": "KB-BIL-002",
+      "doc_type": "article",
+      "category": "account_billing",
+      "title": "Updating your payment method and failed payments",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-06-11",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Update your card",
+        "Failed payments"
+      ],
+      "must_include": [
+        "past_due",
+        "3 and 7 days",
+        "suspended"
+      ]
+    },
+    {
+      "source_id": "KB-BIL-003",
+      "doc_type": "article",
+      "category": "account_billing",
+      "title": "Duplicate charges",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-08-20",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Why it happens",
+        "What we do"
+      ],
+      "must_include": [
+        "refunded in full",
+        "1 business day",
+        "billing"
+      ]
+    },
+    {
+      "source_id": "KB-BIL-004",
+      "doc_type": "article",
+      "category": "account_billing",
+      "title": "Invoices and receipts",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-02-09",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Download invoices",
+        "Invoice statuses"
+      ],
+      "must_include": [
+        "Settings > Billing > Invoices",
+        "USD or INR"
+      ]
+    },
+    {
+      "source_id": "KB-BIL-005",
+      "doc_type": "article",
+      "category": "account_billing",
+      "title": "Upgrading or downgrading your plan",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-05-03",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Upgrade",
+        "Downgrade"
+      ],
+      "must_include": [
+        "prorated",
+        "next billing period"
+      ]
+    },
+    {
+      "source_id": "KB-POL-001",
+      "doc_type": "policy",
+      "category": "policy",
+      "title": "Refund policy",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-01-05",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Eligibility",
+        "Refund window",
+        "Duplicate charges",
+        "Who approves"
+      ],
+      "must_include": [
+        "14 days",
+        "refunded in full",
+        "billing team"
+      ]
+    },
+    {
+      "source_id": "KB-POL-002",
+      "doc_type": "policy",
+      "category": "policy",
+      "title": "Support escalation and response times",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-09-01",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Response targets",
+        "When we hand off to a person"
+      ],
+      "must_include": [
+        "4 hours",
+        "8 hours",
+        "0.70",
+        "7 days"
+      ]
+    },
+    {
+      "source_id": "KB-POL-003",
+      "doc_type": "policy",
+      "category": "policy",
+      "title": "Account security and password resets",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-04-18",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Password resets",
+        "Compromised accounts"
+      ],
+      "must_include": [
+        "registered account email",
+        "30 minutes",
+        "never shares"
+      ]
+    },
+    {
+      "source_id": "KB-API-001",
+      "doc_type": "article",
+      "category": "api_integrations",
+      "title": "API authentication with scoped tokens",
+      "product_versions": "4.x",
+      "last_updated": "2026-08-20",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Create a token",
+        "Use the token"
+      ],
+      "must_include": [
+        "Authorization: Bearer",
+        "CF-403",
+        "CF-401",
+        "scopes"
+      ]
+    },
+    {
+      "source_id": "KB-API-002",
+      "doc_type": "article",
+      "category": "api_integrations",
+      "title": "Legacy API keys (3.x)",
+      "product_versions": "3.x",
+      "last_updated": "2026-08-20",
+      "effective_from": "",
+      "deprecated_on": "2026-12-01",
+      "supersedes": "",
+      "sections": [
+        "Using legacy keys",
+        "Deprecation"
+      ],
+      "must_include": [
+        "X-CF-Key",
+        "2026-12-01"
+      ]
+    },
+    {
+      "source_id": "KB-API-003",
+      "doc_type": "article",
+      "category": "api_integrations",
+      "title": "Rate limits and handling 429 errors",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-07-01",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Limits per plan",
+        "Response headers",
+        "Handling CF-429"
+      ],
+      "must_include": [
+        "Retry-After",
+        "CF-429",
+        "Pro 300"
+      ]
+    },
+    {
+      "source_id": "KB-API-004",
+      "doc_type": "article",
+      "category": "api_integrations",
+      "title": "Verifying webhook signatures (4.x)",
+      "product_versions": "4.x",
+      "last_updated": "2026-03-30",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "How signing works",
+        "Verify"
+      ],
+      "must_include": [
+        "HMAC-SHA256",
+        "X-CF-Signature",
+        "5 minutes"
+      ]
+    },
+    {
+      "source_id": "KB-API-004-3X",
+      "doc_type": "article",
+      "category": "api_integrations",
+      "title": "Verifying webhook signatures (3.x)",
+      "product_versions": "3.x",
+      "last_updated": "2025-09-14",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "How signing works"
+      ],
+      "must_include": [
+        "HMAC-SHA1"
+      ]
+    },
+    {
+      "source_id": "KB-API-005",
+      "doc_type": "article",
+      "category": "api_integrations",
+      "title": "Connecting Salesforce",
+      "product_versions": "4.x",
+      "last_updated": "2026-02-12",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Connect",
+        "Retries"
+      ],
+      "must_include": [
+        "OAuth",
+        "API Enabled",
+        "Retry on upstream errors"
+      ]
+    },
+    {
+      "source_id": "KB-API-006",
+      "doc_type": "article",
+      "category": "api_integrations",
+      "title": "Connecting Slack",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-01-22",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Connect"
+      ],
+      "must_include": [
+        "/invite @CloudFlow"
+      ]
+    },
+    {
+      "source_id": "KB-API-007",
+      "doc_type": "article",
+      "category": "api_integrations",
+      "title": "Listing runs with the REST API",
+      "product_versions": "4.x",
+      "last_updated": "2026-06-30",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Endpoint",
+        "Pagination"
+      ],
+      "must_include": [
+        "/v2/workflows/{id}/runs",
+        "runs:read",
+        "200"
+      ]
+    },
+    {
+      "source_id": "KB-API-008",
+      "doc_type": "article",
+      "category": "api_integrations",
+      "title": "Rotating API tokens",
+      "product_versions": "4.x",
+      "last_updated": "2026-08-20",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Rotate",
+        "If a token leaked"
+      ],
+      "must_include": [
+        "revoke",
+        "365 days"
+      ]
+    },
+    {
+      "source_id": "KB-TS-001",
+      "doc_type": "article",
+      "category": "troubleshooting",
+      "title": "Error code reference",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-08-01",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Error codes"
+      ],
+      "must_include": [
+        "CF-401",
+        "CF-429",
+        "CF-503",
+        "CF-504"
+      ]
+    },
+    {
+      "source_id": "KB-TS-002",
+      "doc_type": "article",
+      "category": "troubleshooting",
+      "title": "Fixing CF-503 errors in Salesforce steps",
+      "product_versions": "4.1+",
+      "last_updated": "2026-02-12",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Cause",
+        "Fix",
+        "Do not"
+      ],
+      "must_include": [
+        "Retry on upstream errors",
+        "Re-authorise",
+        "Delay step",
+        "CF-504"
+      ]
+    },
+    {
+      "source_id": "KB-TS-003",
+      "doc_type": "article",
+      "category": "troubleshooting",
+      "title": "Fixing CF-401 and CF-403 errors",
+      "product_versions": "4.x",
+      "last_updated": "2026-08-20",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "CF-401",
+        "CF-403"
+      ],
+      "must_include": [
+        "CF-401",
+        "CF-403",
+        "scope"
+      ]
+    },
+    {
+      "source_id": "KB-TS-004",
+      "doc_type": "article",
+      "category": "troubleshooting",
+      "title": "Fixing CF-504 step timeouts",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-05-14",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Fix"
+      ],
+      "must_include": [
+        "300 seconds",
+        "CF-504"
+      ]
+    },
+    {
+      "source_id": "KB-TS-005",
+      "doc_type": "article",
+      "category": "troubleshooting",
+      "title": "Workflow is not triggering",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-04-09",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Checklist"
+      ],
+      "must_include": [
+        "Published",
+        "CF-460",
+        "suspended"
+      ]
+    },
+    {
+      "source_id": "KB-TS-006",
+      "doc_type": "article",
+      "category": "troubleshooting",
+      "title": "Webhook signature mismatch",
+      "product_versions": "4.x",
+      "last_updated": "2026-03-30",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Common causes"
+      ],
+      "must_include": [
+        "raw body",
+        "HMAC-SHA256"
+      ]
+    },
+    {
+      "source_id": "KB-TS-007",
+      "doc_type": "article",
+      "category": "troubleshooting",
+      "title": "CF-460: monthly run quota exhausted",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-07-01",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "What it means"
+      ],
+      "must_include": [
+        "CF-460",
+        "1st"
+      ]
+    },
+    {
+      "source_id": "KB-TS-008",
+      "doc_type": "article",
+      "category": "troubleshooting",
+      "title": "Login and password reset problems",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-04-18",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Reset your password"
+      ],
+      "must_include": [
+        "Forgot password",
+        "30 minutes"
+      ]
+    },
+    {
+      "source_id": "KB-ADV-001",
+      "doc_type": "article",
+      "category": "advanced",
+      "title": "Exporting workflow run history",
+      "product_versions": "4.2+",
+      "last_updated": "2026-09-10",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Steps",
+        "Notes"
+      ],
+      "must_include": [
+        "Runs tab",
+        "CSV or JSON",
+        "90 days"
+      ]
+    },
+    {
+      "source_id": "KB-ADV-001-3X",
+      "doc_type": "article",
+      "category": "advanced",
+      "title": "Exporting run history (3.x)",
+      "product_versions": "3.x",
+      "last_updated": "2025-06-02",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Steps"
+      ],
+      "must_include": [
+        "Settings > Data > Export",
+        "CSV only",
+        "30 days"
+      ]
+    },
+    {
+      "source_id": "KB-ADV-002",
+      "doc_type": "article",
+      "category": "advanced",
+      "title": "Branching and loops",
+      "product_versions": "4.x",
+      "last_updated": "2026-05-27",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Branch",
+        "Loop"
+      ],
+      "must_include": [
+        "5 branches",
+        "1,000 items"
+      ]
+    },
+    {
+      "source_id": "KB-ADV-003",
+      "doc_type": "article",
+      "category": "advanced",
+      "title": "Environment variables and secrets",
+      "product_versions": "4.x",
+      "last_updated": "2026-06-03",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Secrets"
+      ],
+      "must_include": [
+        "Settings > Secrets",
+        "masked"
+      ]
+    },
+    {
+      "source_id": "KB-ADV-004",
+      "doc_type": "article",
+      "category": "advanced",
+      "title": "Audit logs",
+      "product_versions": "4.x",
+      "last_updated": "2026-07-19",
+      "effective_from": "",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "Availability"
+      ],
+      "must_include": [
+        "Enterprise plan only",
+        "365 days"
+      ]
+    },
+    {
+      "source_id": "RN-4.1",
+      "doc_type": "release_note",
+      "category": "release_notes",
+      "title": "Release notes 4.1",
+      "product_versions": "4.1+",
+      "last_updated": "2026-02-10",
+      "effective_from": "2026-02-10",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "New"
+      ],
+      "must_include": [
+        "Retry on upstream errors",
+        "Delay steps"
+      ]
+    },
+    {
+      "source_id": "RN-4.3",
+      "doc_type": "release_note",
+      "category": "release_notes",
+      "title": "Release notes 4.3",
+      "product_versions": "4.3+",
+      "last_updated": "2026-07-15",
+      "effective_from": "2026-07-15",
+      "deprecated_on": "",
+      "supersedes": "",
+      "sections": [
+        "New"
+      ],
+      "must_include": [
+        "/v2/runs:batch"
+      ]
+    },
+    {
+      "source_id": "RN-DEP-001",
+      "doc_type": "release_note",
+      "category": "release_notes",
+      "title": "Deprecation: legacy API keys",
+      "product_versions": "3.x;4.x",
+      "last_updated": "2026-08-20",
+      "effective_from": "2026-12-01",
+      "deprecated_on": "",
+      "supersedes": "KB-API-002",
+      "sections": [
+        "What changes"
+      ],
+      "must_include": [
+        "2026-12-01",
+        "X-CF-Key"
+      ]
+    }
+  ],
+  "tickets": [
+    {
+      "source_id": "TKT-2025-0311",
+      "intent": "bug",
+      "product_version": "4.0",
+      "resolved_at": "2025-12-15",
+      "outdated": true,
+      "contradicts": "KB-TS-002",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2025-0420",
+      "intent": "how_to",
+      "product_version": "4.0",
+      "resolved_at": "2025-12-02",
+      "outdated": true,
+      "contradicts": "KB-ADV-001",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2025-0518",
+      "intent": "how_to",
+      "product_version": "4.0",
+      "resolved_at": "2025-12-20",
+      "outdated": true,
+      "contradicts": "KB-API-001",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0102",
+      "intent": "bug",
+      "product_version": "4.1",
+      "resolved_at": "2026-03-04",
+      "outdated": true,
+      "contradicts": "KB-API-004",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0140",
+      "intent": "complaint",
+      "product_version": "4.2",
+      "resolved_at": "2026-05-11",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": true
+    },
+    {
+      "source_id": "TKT-2026-0155",
+      "intent": "complaint",
+      "product_version": "4.3",
+      "resolved_at": "2026-07-22",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": true
+    },
+    {
+      "source_id": "TKT-2026-0171",
+      "intent": "complaint",
+      "product_version": "4.3",
+      "resolved_at": "2026-08-30",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": true
+    },
+    {
+      "source_id": "TKT-2026-0201",
+      "intent": "how_to",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-12",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0202",
+      "intent": "account",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-03",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0203",
+      "intent": "account",
+      "product_version": "4.2",
+      "resolved_at": "2026-08-18",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0204",
+      "intent": "bug",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-01",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0205",
+      "intent": "how_to",
+      "product_version": "4.3",
+      "resolved_at": "2026-08-07",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0206",
+      "intent": "billing",
+      "product_version": "4.1",
+      "resolved_at": "2026-06-22",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0207",
+      "intent": "billing",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-19",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0208",
+      "intent": "how_to",
+      "product_version": "3.8",
+      "resolved_at": "2026-04-15",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0209",
+      "intent": "bug",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-25",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0210",
+      "intent": "account",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-28",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0211",
+      "intent": "how_to",
+      "product_version": "4.3",
+      "resolved_at": "2026-07-30",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0212",
+      "intent": "bug",
+      "product_version": "4.2",
+      "resolved_at": "2026-06-02",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0213",
+      "intent": "account",
+      "product_version": "4.3",
+      "resolved_at": "2026-08-25",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0214",
+      "intent": "how_to",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-09",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0215",
+      "intent": "billing",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-14",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0216",
+      "intent": "how_to",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-21",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0217",
+      "intent": "bug",
+      "product_version": "4.3",
+      "resolved_at": "2026-09-30",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0218",
+      "intent": "account",
+      "product_version": "3.8",
+      "resolved_at": "2026-09-02",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    },
+    {
+      "source_id": "TKT-2026-0219",
+      "intent": "how_to",
+      "product_version": "4.3",
+      "resolved_at": "2026-10-01",
+      "outdated": false,
+      "contradicts": "",
+      "needs_human": false
+    }
+  ],
+  "intended_conflicts": [
+    {
+      "type": "outdated_ticket",
+      "ticket": "TKT-2025-0311",
+      "current_source": "KB-TS-002"
+    },
+    {
+      "type": "outdated_ticket",
+      "ticket": "TKT-2025-0420",
+      "current_source": "KB-ADV-001"
+    },
+    {
+      "type": "outdated_ticket",
+      "ticket": "TKT-2025-0518",
+      "current_source": "KB-API-001"
+    },
+    {
+      "type": "outdated_ticket",
+      "ticket": "TKT-2026-0102",
+      "current_source": "KB-API-004"
+    },
+    {
+      "type": "version_variant",
+      "sources": [
+        "KB-ADV-001",
+        "KB-ADV-001-3X"
+      ],
+      "topic": "run history export"
+    },
+    {
+      "type": "version_variant",
+      "sources": [
+        "KB-API-001",
+        "KB-API-002"
+      ],
+      "topic": "API authentication"
+    },
+    {
+      "type": "version_variant",
+      "sources": [
+        "KB-API-004",
+        "KB-API-004-3X"
+      ],
+      "topic": "webhook signing"
+    },
+    {
+      "type": "future_deprecation",
+      "sources": [
+        "RN-DEP-001",
+        "KB-API-002"
+      ],
+      "effective_from": "2026-12-01"
+    }
+  ]
 }
