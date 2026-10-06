@@ -93,26 +93,35 @@ def _ollama(system: str, user: str, schema: type[BaseModel], temperature: float)
  
  
 def _groq(system: str, user: str, schema: type[BaseModel], temperature: float):
-    model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    model = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+    body = {"model": model, "temperature": temperature,
+            # without max_tokens Groq reserves the model's full output budget and returns 429
+            # on free tiers (qwen: 1,000 output tokens/min) even when the minute is mostly unused
+            "max_tokens": _max_out(schema),
+            "response_format": {"type": "json_object"},
+            "messages": [{"role": "system", "content": system},
+                         {"role": "user", "content": user}]}
+    if os.getenv("GROQ_REASONING_EFFORT", "none"):  # hidden reasoning tokens count as output; "" = model default
+        body["reasoning_effort"] = os.getenv("GROQ_REASONING_EFFORT", "none")
     r = httpx.post("https://api.groq.com/openai/v1/chat/completions", timeout=_timeout(),
-                   headers={"Authorization": f"Bearer {os.environ['GROQ_API_KEY']}"},
-                   json={"model": model, "temperature": temperature,
-                         "response_format": {"type": "json_object"},
-                         "messages": [{"role": "system", "content": system},
-                                      {"role": "user", "content": user}]})
+                   headers={"Authorization": f"Bearer {os.environ['GROQ_API_KEY']}"}, json=body)
     r.raise_for_status()
     d = r.json()
     return d["choices"][0]["message"]["content"], model, d.get("usage", {}).get("total_tokens", 0)
  
  
 def _gemini(system: str, user: str, schema: type[BaseModel], temperature: float):
-    model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
     r = httpx.post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                    timeout=_timeout(), headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]},
                    json={"systemInstruction": {"parts": [{"text": system}]},
                          "contents": [{"role": "user", "parts": [{"text": user}]}],
                          "generationConfig": {"temperature": temperature,
-                                              "responseMimeType": "application/json"}})
+                                              "responseMimeType": "application/json",
+                                              "maxOutputTokens": _max_out(schema),
+                                              # thinking off: same JSON, ~4x fewer tokens on Flash
+                                              "thinkingConfig": {"thinkingBudget":
+                                                                 int(os.getenv("GEMINI_THINKING_BUDGET", "0"))}}})
     r.raise_for_status()
     d = r.json()
     return (d["candidates"][0]["content"]["parts"][0]["text"], model,
@@ -120,6 +129,35 @@ def _gemini(system: str, user: str, schema: type[BaseModel], temperature: float)
  
  
 _PROVIDERS = {"ollama": _ollama, "groq": _groq, "gemini": _gemini}
+
+# output cap per node schema (tokens): generous for the JSON each node returns, small enough for free tiers
+MAX_OUTPUT = {"ClassifierOut": 300, "ComposerOut": 800, "CriticOut": 400}
+
+
+def _max_out(schema: type[BaseModel]) -> int:
+    return MAX_OUTPUT.get(schema.__name__, int(os.getenv("LLM_MAX_OUTPUT_TOKENS", "600")))
+
+
+def _schema_hint(schema: type[BaseModel]) -> str:
+    """Compact field list ({"type": "a|b", "tools": ["x|y"], ...}) instead of the full JSON schema:
+    same information for the model at well under half the input tokens. Pydantic still validates."""
+    full = schema.model_json_schema()
+    defs = full.get("$defs", {})
+
+    def shape(p: dict):
+        if "$ref" in p:
+            return shape(defs[p["$ref"].split("/")[-1]])
+        if "enum" in p:
+            return "|".join(map(str, p["enum"]))
+        if "anyOf" in p:
+            return "|".join(str(shape(x)) for x in p["anyOf"])
+        if p.get("type") == "array":
+            return [shape(p.get("items", {}))]
+        if p.get("type") == "object" and "properties" in p:
+            return {k: shape(v) for k, v in p["properties"].items()}
+        return {"integer": "int", "number": "float", "boolean": "bool"}.get(p.get("type"), p.get("type", "any"))
+
+    return json.dumps(shape(full), separators=(",", ":"))
  
  
 # ------------------------------------------------------------- parsing
@@ -145,8 +183,8 @@ def json_call(system: str, user: str, schema: type[BaseModel], state: Optional[d
         _log(node, "mock", "mock", 0, t0, 0)
         return out
  
-    system_full = (system + "\n\nReturn ONLY one JSON object matching this JSON schema "
-                   "(no prose, no markdown):\n" + json.dumps(schema.model_json_schema()))
+    system_full = (system + "\n\nReturn ONLY one JSON object with these keys (no prose, no markdown):\n"
+                   + _schema_hint(schema))
     errors: list[str] = []
     for provider in provider_chain():
         fn = _PROVIDERS.get(provider)
