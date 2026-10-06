@@ -8,7 +8,7 @@ last_updated: "2026-04-02"
 effective_from: ""
 deprecated_on: ""
 supersedes: ""
-provenance: "template:mock"
+provenance: "template:fallback_after_llm_failure"
 synthetic: "Y"
 ---
 # Inviting team members and managing seats

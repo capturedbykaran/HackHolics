@@ -8,7 +8,7 @@ last_updated: "2026-07-01"
 effective_from: ""
 deprecated_on: ""
 supersedes: ""
-provenance: "template:mock"
+provenance: "template:fallback_after_llm_failure"
 synthetic: "Y"
 ---
 # Plans and limits
