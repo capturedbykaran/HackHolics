@@ -1,0 +1,2 @@
+# Owner: C
+# Verbatim accounts generation prompt (deliverable).
