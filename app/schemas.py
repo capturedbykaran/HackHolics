@@ -1,6 +1,6 @@
 """All Pydantic models (shared contract).
 
-Owner: A
+Owner: B
 """
 
 
@@ -8,7 +8,7 @@ Owner: A
 """Shared Pydantic models + graph state. Owner: A. After M1, additive changes only."""
 from typing import Any, Literal, Optional, TypedDict
  
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field, field_validator
  
 Intent = Literal["how_to", "troubleshooting", "account", "billing",
                  "complaint", "security", "out_of_scope"]
@@ -94,10 +94,21 @@ class Citation(BaseModel):
  
  
 class ToolResult(BaseModel):
+    """`output` is the API contract (section 6.1). app/tools.py (B) builds results with `data=`: accepted as
+    an alias and readable as `.data`, so both spellings refer to the same field."""
     tool: str
     ok: bool = True
-    output: dict[str, Any] = {}
+    output: dict[str, Any] = Field(default_factory=dict, validation_alias=AliasChoices("output", "data"))
     error: Optional[str] = None
+
+    @field_validator("output", mode="before")
+    @classmethod
+    def _none_is_empty(cls, v: Any) -> Any:
+        return {} if v is None else v
+
+    @property
+    def data(self) -> dict[str, Any]:
+        return self.output
  
  
 class Decision(BaseModel):

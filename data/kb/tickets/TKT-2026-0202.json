@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0202",
+  "intent": "account",
+  "product_version": "4.3",
+  "resolved_at": "2026-09-03",
+  "subject": "Getting CF-429 on the Pro plan",
+  "customer_question": "Getting CF-429 on the Pro plan.",
+  "resolution": "Peak was above 300 per minute; added backoff using Retry-After.",
+  "tags": [
+    "account"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

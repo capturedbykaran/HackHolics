@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0155",
+  "intent": "complaint",
+  "product_version": "4.3",
+  "resolved_at": "2026-07-22",
+  "subject": "Angry: account suspended during a launch, workflows stopped",
+  "customer_question": "Angry: account suspended during a launch, workflows stopped.",
+  "resolution": "Escalated to billing; failed payment retried and account reactivated.",
+  "tags": [
+    "complaint"
+  ],
+  "needs_human": true,
+  "outdated": false,
+  "provenance": "template:mock"
+}

@@ -1,0 +1,10 @@
+rule_id,description,parameter,operator,value,scope_plans,effective_from,source_id,source_section
+REFUND-WINDOW-01,Refund requests must be made within 14 days of the charge,refund_window_days,<=,14,ALL,2025-01-01,KB-POL-001,Refund window
+REFUND-DUP-01,Duplicate charges are refunded in full after billing verification,duplicate_charge_refund,==,full,ALL,2025-01-01,KB-POL-001,Duplicate charges
+REFUND-FREE-01,Free plan has no charges and is not refund-eligible,refund_eligible_plans,in,"Pro,Business,Enterprise",ALL,2025-01-01,KB-POL-001,Eligibility
+SLA-BILLING-01,Billing handoffs answered within 1 business day,sla_billing_hours,<=,24,ALL,2025-06-01,KB-POL-002,Response targets
+SLA-SECURITY-01,Security handoffs answered within 4 hours,sla_security_hours,<=,4,ALL,2025-06-01,KB-POL-002,Response targets
+SLA-TECH-PRIO-01,Technical handoffs on priority support within 8 hours,sla_technical_hours,<=,8,"Business,Enterprise",2025-06-01,KB-POL-002,Response targets
+SLA-TECH-STD-01,Technical handoffs on standard support within 24 hours,sla_technical_hours,<=,24,"Free,Pro",2025-06-01,KB-POL-002,Response targets
+ESC-GROUND-01,Answers below this groundedness score after one revision are escalated,critic_min_groundedness,>=,0.70,ALL,2026-09-01,KB-POL-002,When we hand off to a person
+ESC-REPEAT-01,Contacts from the same account within this many days count as repeat contact,repeat_contact_days,<=,7,ALL,2026-09-01,KB-POL-002,When we hand off to a person

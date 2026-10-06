@@ -8,10 +8,15 @@ os.environ["MOCK_LLM"] = "true"
 
 import pytest
 
+import fake_retrieval as fake
+from fake_retrieval import fake_retrieval  # noqa: F401  (fixture)
+
 from app import audit, db, llm, tools
 from app.graph import run_support
 from app.schemas import SupportRequest
 from app.segment import segment_user
+
+pytestmark = pytest.mark.usefixtures("fake_retrieval")  # graph runs never need Chroma or a model
 
 AS_OF = "2026-10-06"
 ACCOUNT_TOOLS = {"lookup_account", "get_usage", "get_plan_limits", "get_invoices",

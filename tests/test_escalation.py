@@ -8,7 +8,10 @@ os.environ["MOCK_LLM"] = "true"
 
 import pytest
 
-from app import audit, db, policy, precedence, retrieval, tools
+import fake_retrieval as fake
+from fake_retrieval import fake_retrieval  # noqa: F401  (fixture)
+
+from app import audit, db, policy, precedence, tools
 from app.escalation import decide
 from app.graph import run_support
 from app.nodes.decide import decide_node
@@ -16,6 +19,8 @@ from app.nodes.gather import gather_node
 from app.policy import default_policy, load_policy, threshold
 from app.schemas import (Chunk, ClassifierOut, ComposerCitation, ComposerOut, CriticOut, Decision,
                          SupportRequest, ToolResult)
+
+pytestmark = pytest.mark.usefixtures("fake_retrieval")  # graph runs never need Chroma or a model
 
 AS_OF = "2026-10-06"
 GOOD_DRAFT = ComposerOut(answer="Open Runs, click Export.", citations=[ComposerCitation(source_id="KB-1", section="S")])
@@ -224,7 +229,7 @@ def test_unresolved_conflict_escalates_unit():
 
 @pytest.fixture
 def conflicting_sources(monkeypatch):
-    monkeypatch.setattr(retrieval, "_CORPUS", retrieval._CORPUS + [TICKET])
+    monkeypatch.setattr(fake, "CORPUS", fake.CORPUS + [TICKET])
     monkeypatch.setattr(precedence, "resolve", lambda chunks: ["resolved: KB-GS-001 over KB-PLN-002", CONFLICT],
                         raising=False)
 

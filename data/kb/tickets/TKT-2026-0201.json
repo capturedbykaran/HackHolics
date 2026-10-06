@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0201",
+  "intent": "how_to",
+  "product_version": "4.3",
+  "resolved_at": "2026-09-12",
+  "subject": "How do I rotate an API token without downtime?",
+  "customer_question": "How do I rotate an API token without downtime?.",
+  "resolution": "Create new token, deploy, revoke old one (KB-API-008).",
+  "tags": [
+    "how_to"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

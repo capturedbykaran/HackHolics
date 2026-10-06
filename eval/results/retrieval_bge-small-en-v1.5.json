@@ -1,0 +1,70 @@
+{
+  "embedder": "BAAI/bge-small-en-v1.5",
+  "cases": 20,
+  "results": [
+    {
+      "config": "dense only",
+      "k": 3,
+      "hit_rate": 1.0,
+      "mrr": 0.8,
+      "p50_ms": 29,
+      "p95_ms": 31,
+      "misses": []
+    },
+    {
+      "config": "hybrid (dense+BM25)",
+      "k": 3,
+      "hit_rate": 0.95,
+      "mrr": 0.7,
+      "p50_ms": 7,
+      "p95_ms": 8,
+      "misses": [
+        {
+          "query": "how fast do you answer billing issues",
+          "expected": "KB-POL-002",
+          "got": [
+            "KB-BIL-003",
+            "TKT-2026-0215",
+            "KB-BIL-005"
+          ]
+        }
+      ]
+    },
+    {
+      "config": "hybrid + rerank",
+      "k": 3,
+      "hit_rate": 1.0,
+      "mrr": 0.7,
+      "p50_ms": 238,
+      "p95_ms": 577,
+      "misses": []
+    },
+    {
+      "config": "dense only",
+      "k": 5,
+      "hit_rate": 1.0,
+      "mrr": 0.8,
+      "p50_ms": 7,
+      "p95_ms": 8,
+      "misses": []
+    },
+    {
+      "config": "hybrid (dense+BM25)",
+      "k": 5,
+      "hit_rate": 1.0,
+      "mrr": 0.71,
+      "p50_ms": 7,
+      "p95_ms": 8,
+      "misses": []
+    },
+    {
+      "config": "hybrid + rerank",
+      "k": 5,
+      "hit_rate": 1.0,
+      "mrr": 0.692,
+      "p50_ms": 716,
+      "p95_ms": 833,
+      "misses": []
+    }
+  ]
+}

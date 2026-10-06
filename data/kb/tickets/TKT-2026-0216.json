@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0216",
+  "intent": "how_to",
+  "product_version": "4.3",
+  "resolved_at": "2026-09-21",
+  "subject": "Can I see who changed a workflow?",
+  "customer_question": "Can I see who changed a workflow?.",
+  "resolution": "Audit logs on Enterprise only.",
+  "tags": [
+    "how_to"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

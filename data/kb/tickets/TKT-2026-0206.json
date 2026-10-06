@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0206",
+  "intent": "billing",
+  "product_version": "4.1",
+  "resolved_at": "2026-06-22",
+  "subject": "Where can I download invoices?",
+  "customer_question": "Where can I download invoices?.",
+  "resolution": "Settings > Billing > Invoices.",
+  "tags": [
+    "billing"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0207",
+  "intent": "billing",
+  "product_version": "4.3",
+  "resolved_at": "2026-09-19",
+  "subject": "Card declined, account shows past_due",
+  "customer_question": "Card declined, account shows past_due.",
+  "resolution": "Updated card; charge retried and succeeded.",
+  "tags": [
+    "billing"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

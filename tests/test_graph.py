@@ -11,9 +11,14 @@ os.environ["MOCK_LLM"] = "true"
 
 import pytest
 
+import fake_retrieval as fake
+from fake_retrieval import fake_retrieval  # noqa: F401  (fixture)
+
 from app import audit, db, tools
 from app.graph import run_support
 from app.schemas import SupportRequest
+
+pytestmark = pytest.mark.usefixtures("fake_retrieval")  # graph runs never need Chroma or a model
 
 ACCT = "A1001"
 
