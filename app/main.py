@@ -15,12 +15,13 @@ import json
 import logging
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel, Field, field_validator
 
 from app import audit, config, db, llm, store
 from app.graph import run_support
@@ -43,6 +44,44 @@ app.add_middleware(
 )
 
 app.include_router(ingest_router)
+
+TICKET_STATUSES = ("open", "in_progress", "resolved")
+
+
+class TicketUpdate(BaseModel):
+    status: Literal["open", "in_progress", "resolved"] | None = None
+    assignee: str | None = Field(default=None, max_length=120)
+
+    @field_validator("assignee")
+    @classmethod
+    def normalize_assignee(cls, value: str | None) -> str | None:
+        return value.strip() if value is not None else None
+
+
+def _ticket_from_row(row: Any) -> dict[str, Any]:
+    try:
+        payload = json.loads(row["bundle_json"] or "{}")
+    except json.JSONDecodeError as exc:
+        log.exception("invalid handoff bundle JSON for %s", row["handoff_id"])
+        raise HTTPException(500, "stored handoff bundle is invalid") from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(500, "stored handoff bundle has an invalid shape")
+    director = payload.get("_director", {})
+    if not isinstance(director, dict):
+        director = {}
+    return {
+        "handoff_id": row["handoff_id"],
+        "conversation_id": row["conversation_id"],
+        "account_id": row["account_id"],
+        "queue": row["queue"],
+        "priority": row["priority"],
+        "created_at": row["created_at"],
+        "status": director.get("status", "open"),
+        "assignee": director.get("assignee", ""),
+        "summary": payload.get("customer_summary", ""),
+        "escalation_reasons": payload.get("escalation_reasons", []),
+        "bundle": payload,
+    }
 
 
 @app.get("/health")
@@ -87,6 +126,61 @@ def get_handoff_endpoint(handoff_id: str):
             except Exception:
                 pass
         return d
+    finally:
+        con.close()
+
+
+@app.get("/api/tickets")
+def list_demo_tickets(status: str | None = Query(None)):
+    """List handoffs as tickets in the internal demo ticket director."""
+    if status is not None and status not in TICKET_STATUSES:
+        raise HTTPException(422, f"status must be one of: {', '.join(TICKET_STATUSES)}")
+    con = db.get_conn()
+    try:
+        rows = con.execute(
+            "SELECT handoff_id, conversation_id, account_id, queue, priority, created_at, bundle_json "
+            "FROM handoffs ORDER BY created_at DESC"
+        ).fetchall()
+        tickets = [_ticket_from_row(row) for row in rows]
+        if status is not None:
+            tickets = [ticket for ticket in tickets if ticket["status"] == status]
+        return {"count": len(tickets), "tickets": tickets}
+    finally:
+        con.close()
+
+
+@app.patch("/api/tickets/{handoff_id}")
+def update_demo_ticket(handoff_id: str, update: TicketUpdate):
+    """Update the status or assignee stored alongside a handoff bundle."""
+    changes = update.model_dump(exclude_unset=True)
+    if not changes:
+        raise HTTPException(422, "provide status or assignee to update")
+    con = db.get_conn()
+    try:
+        with con:
+            row = con.execute(
+                "SELECT handoff_id, conversation_id, account_id, queue, priority, created_at, bundle_json "
+                "FROM handoffs WHERE handoff_id = ?",
+                (handoff_id,),
+            ).fetchone()
+            if row is None:
+                raise HTTPException(404, f"unknown handoff_id {handoff_id}")
+            ticket = _ticket_from_row(row)
+            director = ticket["bundle"].setdefault("_director", {})
+            if "status" in changes:
+                director["status"] = changes["status"]
+            if "assignee" in changes:
+                director["assignee"] = changes["assignee"] or ""
+            con.execute(
+                "UPDATE handoffs SET bundle_json = ? WHERE handoff_id = ?",
+                (json.dumps(ticket["bundle"], default=str), handoff_id),
+            )
+            updated = con.execute(
+                "SELECT handoff_id, conversation_id, account_id, queue, priority, created_at, bundle_json "
+                "FROM handoffs WHERE handoff_id = ?",
+                (handoff_id,),
+            ).fetchone()
+            return _ticket_from_row(updated)
     finally:
         con.close()
 
@@ -629,6 +723,33 @@ UI_HTML = """<!DOCTYPE html>
           </div>
         </div>
 
+        <!-- DEMO TICKET DIRECTOR -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-100 flex items-center space-x-2">
+                <i class="fa-solid fa-inbox text-indigo-400"></i>
+                <span>Demo Human Ticket Director</span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Escalated support cases appear here as tickets. Assign an owner and track their status.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="ticket-status-filter" onchange="loadDemoTickets()" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200">
+                <option value="">All statuses</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In progress</option>
+                <option value="resolved">Resolved</option>
+              </select>
+              <button type="button" onclick="loadDemoTickets()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-lg text-xs">
+                <i class="fa-solid fa-arrows-rotate mr-1"></i>Refresh
+              </button>
+            </div>
+          </div>
+          <div id="demo-tickets-list" class="space-y-3">
+            <p class="text-xs text-slate-500">Loading demo tickets...</p>
+          </div>
+        </div>
+
         <!-- AUDIT RESULT VIEWER -->
         <div id="audit-result-card" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-md">
           <h3 class="text-md font-bold text-slate-100 mb-3 flex items-center justify-between">
@@ -762,6 +883,7 @@ UI_HTML = """<!DOCTYPE html>
       document.getElementById(`view-${tabId}`).classList.remove('hidden');
 
       if (tabId === 'ingest') loadSources();
+      if (tabId === 'audit') loadDemoTickets();
       if (tabId === 'db') loadDbTables();
       if (tabId === 'status') loadStats();
     }
@@ -862,18 +984,19 @@ UI_HTML = """<!DOCTYPE html>
 
         // Format sources & handoffs
         let sourcesHtml = '';
-        if (data.sources && data.sources.length > 0) {
+        const citations = Array.isArray(data.citations) ? data.citations : [];
+        if (citations.length > 0) {
           sourcesHtml = `
             <div class="mt-3 pt-3 border-t border-slate-700/60">
-              <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5"><i class="fa-solid fa-book-bookmark mr-1"></i> Sources Cited (${data.sources.length}):</p>
+              <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5"><i class="fa-solid fa-book-bookmark mr-1"></i> Sources Cited (${citations.length}):</p>
               <div class="space-y-1">
-                ${data.sources.map(s => `
+                ${citations.map((citation, index) => `
                   <div class="bg-slate-900/60 border border-slate-700/50 rounded-lg p-2 text-xs">
                     <div class="flex justify-between font-mono text-[11px] text-indigo-300">
-                      <span><strong>${escapeHtml(s.source_id)}</strong> - ${escapeHtml(s.title || '')}</span>
-                      <span class="text-slate-400">${escapeHtml(s.section || '')}</span>
+                      <span><strong>[${index + 1}] ${escapeHtml(citation.source_id)}</strong> - ${escapeHtml(citation.doc_type || 'source')}</span>
+                      <span class="text-slate-400">${escapeHtml(citation.section || '')}</span>
                     </div>
-                    ${s.snippet ? `<p class="text-slate-300 text-[11px] mt-1 line-clamp-2">${escapeHtml(s.snippet)}</p>` : ''}
+                    <p class="text-[10px] text-slate-500 mt-1">Version: ${escapeHtml(citation.product_versions || 'unspecified')} | Updated: ${escapeHtml(citation.last_updated || 'unknown')}</p>
                   </div>
                 `).join('')}
               </div>
@@ -1107,6 +1230,66 @@ UI_HTML = """<!DOCTYPE html>
         document.getElementById('audit-result-json').innerText = JSON.stringify(data, null, 2);
       } catch (err) {
         alert('Handoff lookup error: ' + err.message);
+      }
+    }
+
+    async function loadDemoTickets() {
+      const container = document.getElementById('demo-tickets-list');
+      if (!container) return;
+      const status = document.getElementById('ticket-status-filter')?.value || '';
+      const query = status ? `?status=${encodeURIComponent(status)}` : '';
+      container.innerHTML = '<p class="text-xs text-slate-500">Loading demo tickets...</p>';
+      try {
+        const res = await fetch(`/api/tickets${query}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Ticket list request failed');
+        if (!data.tickets.length) {
+          container.innerHTML = '<p class="text-xs text-slate-400 bg-slate-900/60 rounded-xl p-4">No tickets in this view yet. Escalate a support chat request to create one.</p>';
+          return;
+        }
+        const statuses = {open: 'Open', in_progress: 'In progress', resolved: 'Resolved'};
+        container.innerHTML = data.tickets.map(ticket => `
+          <article class="bg-slate-900/70 border border-slate-700 rounded-xl p-4">
+            <div class="flex flex-wrap justify-between gap-3">
+              <div>
+                <button type="button" onclick="document.getElementById('lookup-handoff-id').value='${escapeHtml(ticket.handoff_id)}'; document.getElementById('lookup-handoff-id').form.requestSubmit();" class="font-mono text-sm font-bold text-indigo-300 hover:text-indigo-200">${escapeHtml(ticket.handoff_id)}</button>
+                <p class="text-xs text-slate-300 mt-1">${escapeHtml(ticket.summary || 'Escalated support case')}</p>
+                <p class="text-[11px] text-slate-500 mt-1">${escapeHtml(ticket.account_id || 'Prospect')} · ${escapeHtml(ticket.queue)} queue · ${escapeHtml(ticket.priority)} priority · ${escapeHtml(ticket.created_at || '')}</p>
+              </div>
+              <div class="text-[11px] text-amber-300">${escapeHtml((ticket.escalation_reasons || []).join(', '))}</div>
+            </div>
+            <div class="flex flex-wrap items-end gap-2 mt-4">
+              <label class="text-[11px] text-slate-400">Status
+                <select id="ticket-status-${escapeHtml(ticket.handoff_id)}" class="block mt-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200">
+                  ${Object.entries(statuses).map(([value, label]) => `<option value="${value}" ${ticket.status === value ? 'selected' : ''}>${label}</option>`).join('')}
+                </select>
+              </label>
+              <label class="text-[11px] text-slate-400 flex-1 min-w-48">Assigned to
+                <input id="ticket-assignee-${escapeHtml(ticket.handoff_id)}" maxlength="120" value="${escapeHtml(ticket.assignee || '')}" placeholder="Unassigned" class="block w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-slate-200">
+              </label>
+              <button type="button" onclick="updateDemoTicket('${escapeHtml(ticket.handoff_id)}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-medium">Save ticket</button>
+            </div>
+          </article>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<p class="text-xs text-rose-400">Failed to load tickets: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    async function updateDemoTicket(handoffId) {
+      const status = document.getElementById(`ticket-status-${handoffId}`).value;
+      const assignee = document.getElementById(`ticket-assignee-${handoffId}`).value;
+      try {
+        const res = await fetch(`/api/tickets/${encodeURIComponent(handoffId)}`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({status, assignee}),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Ticket update failed');
+        await loadDemoTickets();
+      } catch (err) {
+        alert('Ticket update error: ' + err.message);
       }
     }
 

@@ -38,6 +38,52 @@ def test_health_check(client):
     assert res.json()["status"] == "ok"
 
 
+def test_demo_ticket_director_lists_filters_and_updates_handoffs(client):
+    from app.schemas import HandoffBundle
+    from app.tools import create_handoff
+
+    handoff_id = create_handoff(HandoffBundle(
+        queue="technical",
+        priority="high",
+        intent="troubleshooting",
+        urgency="high",
+        sentiment="frustrated",
+        escalation_reasons=["tool_failure"],
+        customer_summary="Customer needs help with a failed workflow.",
+        account_id="A1001",
+        conversation_id="C-TICKET-001",
+        trace_id="T-TICKET-001",
+        customer_segment="existing_customer",
+    ))
+
+    listed = client.get("/api/tickets")
+    assert listed.status_code == 200
+    ticket = next(item for item in listed.json()["tickets"] if item["handoff_id"] == handoff_id)
+    assert ticket["status"] == "open"
+    assert ticket["assignee"] == ""
+    assert ticket["summary"] == "Customer needs help with a failed workflow."
+
+    updated = client.patch(
+        f"/api/tickets/{handoff_id}",
+        json={"status": "in_progress", "assignee": "Demo Agent"},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["status"] == "in_progress"
+    assert updated.json()["assignee"] == "Demo Agent"
+
+    assert client.get("/api/tickets?status=open").json()["count"] == 0
+    assert client.get("/api/tickets?status=in_progress").json()["count"] == 1
+    stored_bundle = client.get(f"/handoffs/{handoff_id}").json()["bundle"]
+    assert stored_bundle["escalation_reasons"] == ["tool_failure"]
+    assert stored_bundle["_director"] == {"status": "in_progress", "assignee": "Demo Agent"}
+
+
+def test_demo_ticket_director_rejects_invalid_updates(client):
+    assert client.get("/api/tickets?status=invalid").status_code == 422
+    assert client.patch("/api/tickets/H-missing", json={"status": "closed"}).status_code == 422
+    assert client.patch("/api/tickets/H-missing", json={"status": "resolved"}).status_code == 404
+
+
 
 def test_ingest_markdown_article_success(client):
     meta = {
@@ -318,6 +364,9 @@ def test_ui_frontend_html(client):
     assert res.status_code == 200
     assert "InsightDesk" in res.text
     assert "Support Chat" in res.text
+    assert "Array.isArray(data.citations)" in res.text
+    assert "Sources Cited" in res.text
+    assert "Demo Human Ticket Director" in res.text
 
     res_ui = client.get("/ui")
     assert res_ui.status_code == 200
@@ -347,4 +396,3 @@ def test_api_search_and_stats(client):
     res_search = client.get("/api/search?q=webhook")
     assert res_search.status_code == 200
     assert "chunks" in res_search.json()
-

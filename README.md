@@ -302,11 +302,12 @@ The FastAPI-served workspace has the following sections:
 - **Support Chat:** Choose an account context and date, send support messages, and inspect citations, answer type, intent, segment, trace ID, and handoff details.
 - **Knowledge Base and Ingestion:** Upload supported files, optionally provide source metadata, run a dry-run preview, and inspect or refresh registered sources.
 - **Retrieval and Precedence:** Search the indexed knowledge base with version/date filters and inspect retrieved chunks and conflicts.
-- **Audit and Handoffs:** Look up an audit record by trace ID or a handoff by handoff ID.
+- **Audit and Handoffs:** Look up audit records and handoffs, and manage escalated cases in the demo ticket director. Tickets can be assigned to a demo owner and moved through open, in-progress, and resolved states.
 - **Database Explorer:** Inspect SQLite tables and ChromaDB chunks.
 - **System Health:** Review application/database/vector-store statistics and seed controls.
 
 The login dialog is a client-side demo convenience. It is not server-side authentication and must not be treated as an access-control boundary.
+The ticket director is also demo-only: it stores ticket status and assignee alongside local SQLite handoff records and does not notify or assign a real support team.
 
 ## Screenshots
 
@@ -380,6 +381,8 @@ FastAPI's interactive schema is available at `/docs`. The main routes are:
 | `POST` | `/support` | Runs one request through the support pipeline. |
 | `GET` | `/conversations/{conversation_id}` | Returns redacted conversation turns. |
 | `GET` | `/handoffs/{handoff_id}` | Returns a handoff record and its bundle. |
+| `GET` | `/api/tickets` | Lists escalated handoffs as demo tickets; accepts an optional `status` filter (`open`, `in_progress`, or `resolved`). |
+| `PATCH` | `/api/tickets/{handoff_id}` | Updates a demo ticket's status and/or assignee. |
 | `GET` | `/audit/{trace_id}` | Looks up an audit record by trace ID. |
 | `GET` | `/api/search` | Runs retrieval and precedence inspection for a query. |
 | `GET` | `/api/stats` | Returns SQLite table counts, Chroma chunk count, and embedder. |
