@@ -1,0 +1,18 @@
+# Owner: D
+fastapi
+uvicorn[standard]
+pydantic>=2
+pydantic-settings
+python-dotenv
+langgraph
+chromadb
+sentence-transformers
+ollama
+groq
+google-generativeai
+streamlit
+requests
+pyyaml
+python-frontmatter
+pytest
+httpx
