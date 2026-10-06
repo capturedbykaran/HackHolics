@@ -38,38 +38,61 @@ The primary frontend is served by FastAPI at `/` and `/ui`. A separate Streamlit
 
 ```mermaid
 flowchart LR
-    Browser["Browser workspace"] -->|HTML and UI API calls| API["FastAPI app.main"]
-    Client["API client"] -->|POST /support| API
-    API --> Graph["LangGraph support pipeline"]
+    subgraph Client["Client"]
+        CLI["curl / loader CLI"]
+        Streamlit["Streamlit UI :8501"]
+    end
 
-    Graph --> Guard["1. Guard"]
-    Guard --> Classify["2. Classify"]
-    Classify --> Gather["3. Gather"]
-    Gather --> Compose["4. Compose"]
-    Compose --> Critic["5. Critic"]
-    Critic --> Decide["6. Decide"]
-    Decide -->|revise, at most once| Compose
-    Decide --> Finalize["7. Finalize"]
-    Guard -->|early refusal or clarification| Finalize
-    Classify -->|early exit| Finalize
-    Gather -->|failure or human request| Decide
-    Finalize --> Response["SupportResponse"]
+    subgraph Service["FastAPI service :8000"]
+        Workspace["Browser workspace · / and /ui"]
+        Support["POST /support"]
+        ReadAPI["GET /health, /sources, /conversations, /handoffs, /audit"]
+        Ingest["POST /ingest"]
+    end
 
-    Classify -. structured JSON call .-> LLM["LLM gateway"]
-    Compose -. structured JSON call .-> LLM
-    Critic -. structured JSON call .-> LLM
-    LLM --> Ollama["Ollama by default"]
-    LLM -. opt-in fallback .-> Cloud["Groq and/or Gemini"]
+    subgraph Pipeline["LangGraph pipeline"]
+        direction TB
+        Guard["1 Guard · code"] --> Classify["2 Classify · LLM"]
+        Classify --> Gather["3 Gather · code, retrieval, precedence, tools"]
+        Gather --> Compose["4 Compose · LLM"]
+        Compose --> Critic["5 Critic · LLM + code checks"]
+        Critic --> Decide["6 Decide · code (Annex A policy)"]
+        Decide --> Outcome["answer / escalate / not_found"]
+        Outcome --> Finalize["7 Finalize · code, handoff, PII scrub, audit"]
+        Decide -. revise once .-> Compose
+        Finalize --> Response["SupportResponse"]
+    end
 
-    Gather --> Retrieval["Hybrid retrieval"]
-    Retrieval --> Chroma["Chroma vector collection"]
-    Retrieval --> BM25["BM25 keyword index"]
-    Gather --> Tools["Allowlisted account tools"]
-    Tools --> SQLite["SQLite account, usage, billing, and policy data"]
-    Finalize --> Audit["SQLite audit, conversations, and handoffs"]
+    subgraph Gateway["LLM gateway"]
+        GatewayCall["llm.py · JSON validation, retry, failover"]
+        Ollama["Ollama local · qwen2.5:7b-instruct"]
+        Groq["Groq · optional cloud fallback"]
+        Gemini["Gemini · optional cloud fallback"]
+        GatewayCall -->|default provider| Ollama
+        GatewayCall -. "LLM_FALLBACK=cloud, if configured" .-> Groq
+        Groq -. "if unavailable" .-> Gemini
+    end
 
-    API --> Ingest["Knowledge-base ingestion API"]
-    Ingest --> Chroma
+    subgraph Store["Local store"]
+        Embed["bge-small-en-v1.5 · local embeddings"]
+        Chroma["ChromaDB · knowledge-base chunks"]
+        BM25["BM25 · keyword index"]
+        SQLite["SQLite · accounts, usage, invoices, status, policy registry, handoffs, audit"]
+        Embed --> Chroma
+    end
+
+    CLI --> Support
+    Streamlit --> Support
+    Workspace --> Support
+    Support --> Guard
+    Classify -. structured JSON .-> GatewayCall
+    Compose -. structured JSON .-> GatewayCall
+    Critic -. structured JSON .-> GatewayCall
+    Gather -->|dense retrieval query| Embed
+    Gather -->|keyword retrieval| BM25
+    Gather -->|allowlisted account tools| SQLite
+    Finalize --> SQLite
+    Ingest --> Embed
     Ingest --> SQLite
 ```
 
