@@ -188,6 +188,13 @@ def test_outdated_ticket_and_article_both_retrieved_for_precedence(stores):
     assert {"KB-TS-002", "TKT-2025-0311"} <= ids
 
 
+def test_chunk_converts_to_shared_schema(stores):
+    _, retrieval = stores
+    r = retrieval.search("legacy api key header X-CF-Key", version="3.8", as_of_date="2026-10-06", use_rerank=False)
+    up = next(c for c in r["upcoming"] if c.meta["source_id"] == "RN-DEP-001").to_schema()
+    assert up.supersedes == ["KB-API-002"] and up.effective_from == "2026-12-01" and up.authority_level == 2
+
+
 def test_diversity_cap(stores):
     _, retrieval = stores
     r = retrieval.search("CloudFlow plan limits seats runs", version="4.3", k=8, use_rerank=False)

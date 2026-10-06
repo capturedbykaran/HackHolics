@@ -9,6 +9,7 @@ are exact strings that dense embeddings blur; BM25 catches them, dense catches p
 Precedence (which source wins a conflict) is NOT done here; that is app/precedence.py (B), which
 needs to see both the outdated ticket and the current article.
 """
+import re
 import time
 from dataclasses import dataclass, field
 from datetime import date
@@ -36,6 +37,17 @@ class Chunk:
         return {"source_id": m["source_id"], "doc_type": m["doc_type"], "title": m["title"],
                 "section": m["section"], "product_versions": m["product_versions"],
                 "last_updated": m["last_updated"]}
+
+    def to_schema(self):
+        """-> app.schemas.Chunk (A's shared contract), for the Gather node."""
+        from app.schemas import Chunk as SchemaChunk
+        m = self.meta
+        return SchemaChunk(text=self.text, source_id=m["source_id"], section=m["section"], doc_type=m["doc_type"],
+                           authority_level=m["authority_level"], product_versions=m["product_versions"],
+                           last_updated=m["last_updated"], effective_from=m["effective_from"] or None,
+                           deprecated_on=m["deprecated_on"] or None,
+                           supersedes=[s for s in re.split(r"[;,\s]+", m["supersedes"]) if s],
+                           score=float(self.score))
 
 
 def _where(version: str | None, doc_types: list[str] | None) -> dict | None:
