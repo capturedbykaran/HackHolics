@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0102",
+  "intent": "bug",
+  "product_version": "4.1",
+  "resolved_at": "2026-03-04",
+  "subject": "Webhook signature check fails after upgrade",
+  "customer_question": "Webhook signature check fails after upgrade.",
+  "resolution": "Verify the signature with SHA1 of the body.",
+  "tags": [
+    "bug"
+  ],
+  "needs_human": false,
+  "outdated": true,
+  "provenance": "template:mock"
+}

@@ -1,0 +1,23 @@
+# InsightDesk data validation report
+# generated 2026-10-06T09:31:43Z by: python scripts/validate_kb.py ; python scripts/validate_accounts.py --dir data/seed
+
+## Knowledge base (scripts/validate_kb.py)
+PASS >= 30 help-center articles (article+policy)
+PASS >= 2 product versions with version-specific articles
+PASS >= 25 resolved tickets
+PASS >= 3 angry tickets needing a human
+PASS >= 3 outdated tickets contradicting docs
+PASS >= 1 release note with a future deprecation
+PASS policy articles for refund window, plan limits, SLAs
+PASS every policy_registry row cites an existing source
+PASS all files listed in source_register.csv
+categories: {'getting_started': 5, 'account_billing': 5, 'policy': 4, 'api_integrations': 10, 'community': 1, 'troubleshooting': 8, 'advanced': 5, 'release_notes': 3}
+NOTE KB-ADV-001-3X: short article (36 words)
+NOTE KB-ADV-003: short article (36 words)
+NOTE KB-ADV-004: short article (37 words)
+NOTE KB-API-004-3X: short article (36 words)
+NOTE RN-4.1: short article (38 words)
+NOTE RN-4.3: short article (26 words)
+
+## Accounts (scripts/validate_accounts.py --dir data/seed)
+0 violation(s)

@@ -1,2 +1,17 @@
-# Owner: C
-# Verbatim ticket generation prompt (deliverable).
+SYSTEM:
+You write realistic resolved customer-support tickets for CloudFlow, a fictional SaaS
+workflow-automation product. Customers are synthetic: never use real names, real companies,
+real emails or phone numbers. Output strict JSON only.
+
+USER:
+Write resolved ticket {source_id} as JSON with exactly these keys:
+  "subject": short ticket subject,
+  "customer_question": the customer's message, 40-110 words, in a natural customer voice{tone},
+  "resolution": the agent's resolution note, 30-90 words, written as the support agent,
+  "tags": 2-4 lowercase tags.
+
+Facts to use (do not add other technical facts, numbers or menu paths):
+- Product version: {product_version}
+- Customer problem: {gist_q}
+- How it was resolved: {gist_r}
+{extra}

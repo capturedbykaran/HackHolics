@@ -32,6 +32,13 @@ Or with Docker (Ollama runs on the host, reached via `host.docker.internal`):
 docker compose up --build
 ```
 
+## Data and knowledge base
+
+41 KB documents, 27 tickets and 40 synthetic accounts live in `data/` and are generated from
+`app/world.py`. Judges' accounts: `python scripts/load_accounts.py --dir test_accounts/`.
+New documents: `POST /ingest` (searchable immediately). Details in
+[docs/data_pipeline.md](docs/data_pipeline.md) and [DATA_CARD.md](DATA_CARD.md).
+
 ## API samples
 
 See `samples/curl_examples.sh`.

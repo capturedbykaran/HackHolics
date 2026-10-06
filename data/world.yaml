@@ -1,6 +1,0 @@
-# Owner: C
-# Single source of facts: versions, plans, error codes, deprecations.
-versions: []
-plans: []
-error_codes: []
-deprecations: []

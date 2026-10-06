@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0171",
+  "intent": "complaint",
+  "product_version": "4.3",
+  "resolved_at": "2026-08-30",
+  "subject": "Angry: says a teammate deleted workflows, demands data restore and com",
+  "customer_question": "Angry: says a teammate deleted workflows, demands data restore and compensation.",
+  "resolution": "Escalated to technical and billing; workflows restored from 30-day retention, credit decided by billing.",
+  "tags": [
+    "complaint"
+  ],
+  "needs_human": true,
+  "outdated": false,
+  "provenance": "template:mock"
+}

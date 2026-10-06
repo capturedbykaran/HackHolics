@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0208",
+  "intent": "how_to",
+  "product_version": "3.8",
+  "resolved_at": "2026-04-15",
+  "subject": "Export run history on 3.8",
+  "customer_question": "Export run history on 3.8.",
+  "resolution": "Settings > Data > Export, CSV, up to 30 days.",
+  "tags": [
+    "how_to"
+  ],
+  "needs_human": false,
+  "outdated": false,
+  "provenance": "template:mock"
+}

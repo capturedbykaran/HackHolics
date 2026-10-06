@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2026-0140",
+  "intent": "complaint",
+  "product_version": "4.2",
+  "resolved_at": "2026-05-11",
+  "subject": "Angry: charged twice this month, third email, wants a manager",
+  "customer_question": "Angry: charged twice this month, third email, wants a manager.",
+  "resolution": "Escalated to billing; duplicate charge refunded in full after verification.",
+  "tags": [
+    "complaint"
+  ],
+  "needs_human": true,
+  "outdated": false,
+  "provenance": "template:mock"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "TKT-2025-0518",
+  "intent": "how_to",
+  "product_version": "4.0",
+  "resolved_at": "2025-12-20",
+  "subject": "Which header do I use for API auth on a new integration?",
+  "customer_question": "Which header do I use for API auth on a new integration?.",
+  "resolution": "Use your account API key in the X-CF-Key header.",
+  "tags": [
+    "how_to"
+  ],
+  "needs_human": false,
+  "outdated": true,
+  "provenance": "template:mock"
+}
