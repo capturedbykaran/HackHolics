@@ -325,8 +325,23 @@ UI_HTML = """<!DOCTYPE html>
         <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span class="font-medium">System Online</span>
       </div>
+
+      <!-- USER PROFILE & LOGOUT -->
+      <div id="user-badge" class="flex items-center space-x-2 bg-slate-900/80 border border-slate-700/70 px-3 py-1 rounded-xl">
+        <div class="h-5 w-5 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[10px] font-bold">
+          <i class="fa-solid fa-user"></i>
+        </div>
+        <div class="text-left">
+          <p id="user-name-display" class="font-semibold text-slate-200 text-[11px] leading-tight">Admin</p>
+          <p id="user-email-display" class="text-[10px] text-slate-400 leading-tight">admin@cloudflow.com</p>
+        </div>
+        <button onclick="handleLogout()" title="Logout" class="text-slate-400 hover:text-rose-400 ml-1.5 transition">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
     </div>
   </header>
+
 
   <!-- MAIN VIEWPORT -->
   <main class="flex-1 overflow-hidden relative">
@@ -1268,17 +1283,117 @@ UI_HTML = """<!DOCTYPE html>
       });
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+  <!-- DUMMY LOGIN MODAL OVERLAY -->
+  <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4">
+    <div class="bg-slate-800 border border-slate-700/80 rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
+      <div class="text-center mb-6">
+        <div class="h-14 w-14 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 flex items-center justify-center text-white mx-auto mb-3 shadow-lg shadow-indigo-500/30">
+          <i class="fa-solid fa-shield-halved text-2xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-100">Sign in to InsightDesk</h2>
+        <p class="text-xs text-slate-400 mt-1">Autonomous Tier-1 Support & Guardrail Evaluation</p>
+      </div>
+
+      <!-- DEMO CREDENTIALS BOX -->
+      <div class="bg-slate-900/80 border border-slate-700/70 rounded-2xl p-3.5 mb-6 text-xs space-y-2">
+        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+          <span><i class="fa-solid fa-key text-indigo-400 mr-1"></i> Demo Credentials (Click to quick-fill):</span>
+        </p>
+        <div class="grid grid-cols-1 gap-1.5 font-mono text-[11px]">
+          <button type="button" onclick="quickFill('admin@cloudflow.com', 'admin123', 'Admin', 'admin')" class="w-full text-left bg-slate-800 hover:bg-indigo-950/40 hover:border-indigo-500/50 border border-slate-700/50 p-2 rounded-lg flex items-center justify-between transition">
+            <span class="text-slate-200">👑 <strong>Admin:</strong> admin@cloudflow.com</span>
+            <span class="text-slate-500 text-[10px]">admin123</span>
+          </button>
+          <button type="button" onclick="quickFill('agent@cloudflow.com', 'agent123', 'Agent', 'agent')" class="w-full text-left bg-slate-800 hover:bg-indigo-950/40 hover:border-indigo-500/50 border border-slate-700/50 p-2 rounded-lg flex items-center justify-between transition">
+            <span class="text-slate-200">🎧 <strong>Support:</strong> agent@cloudflow.com</span>
+            <span class="text-slate-500 text-[10px]">agent123</span>
+          </button>
+          <button type="button" onclick="quickFill('judge@hcltech.com', 'judge2026', 'Judge', 'judge')" class="w-full text-left bg-slate-800 hover:bg-indigo-950/40 hover:border-indigo-500/50 border border-slate-700/50 p-2 rounded-lg flex items-center justify-between transition">
+            <span class="text-slate-200">⚖️ <strong>Judge:</strong> judge@hcltech.com</span>
+            <span class="text-slate-500 text-[10px]">judge2026</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Email Address</label>
+          <input type="email" id="login-email" value="admin@cloudflow.com" required placeholder="name@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Password</label>
+          <input type="password" id="login-password" value="admin123" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div id="login-error-msg" class="hidden text-xs text-rose-400 font-medium bg-rose-500/10 border border-rose-500/30 p-2.5 rounded-lg text-center">
+          Invalid email or password. Use demo credentials above.
+        </div>
+
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 rounded-xl text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2">
+          <span>Sign In to Workspace</span>
+          <i class="fa-solid fa-arrow-right text-xs"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // AUTHENTICATION STATE
+    const VALID_USERS = {
+      'admin@cloudflow.com': { password: 'admin123', name: 'Admin User', role: 'admin' },
+      'agent@cloudflow.com': { password: 'agent123', name: 'Support Agent', role: 'agent' },
+      'judge@hcltech.com': { password: 'judge2026', name: 'Hackathon Judge', role: 'judge' },
+    };
+
+    function checkAuth() {
+      const stored = localStorage.getItem('insightdesk_user');
+      if (stored) {
+        try {
+          const user = JSON.parse(stored);
+          setUserSession(user);
+          return;
+        } catch(e) {}
+      }
+      document.getElementById('login-modal').classList.remove('hidden');
     }
 
-    // Auto initialize session
+    function quickFill(email, pwd, name, role) {
+      document.getElementById('login-email').value = email;
+      document.getElementById('login-password').value = pwd;
+      document.getElementById('login-error-msg').classList.add('hidden');
+      setUserSession({ email, name, role });
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const password = document.getElementById('login-password').value;
+      const user = VALID_USERS[email];
+
+      if (user && user.password === password) {
+        document.getElementById('login-error-msg').classList.add('hidden');
+        setUserSession({ email, name: user.name, role: user.role });
+      } else {
+        document.getElementById('login-error-msg').classList.remove('hidden');
+      }
+    }
+
+    function setUserSession(user) {
+      localStorage.setItem('insightdesk_user', JSON.stringify(user));
+      document.getElementById('user-name-display').innerText = user.name;
+      document.getElementById('user-email-display').innerText = user.email;
+      document.getElementById('login-modal').classList.add('hidden');
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('insightdesk_user');
+      document.getElementById('login-modal').classList.remove('hidden');
+    }
+
+    // Initialize session and auth check
+    checkAuth();
     newConversation();
   </script>
 </body>
