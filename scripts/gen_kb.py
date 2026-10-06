@@ -23,12 +23,18 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from app import world as W                      # noqa: E402
-from scripts.gen_llm import chat, is_mock, LLMUnavailable    # noqa: E402
+from scripts.gen_llm import USAGE, chat, is_mock, last_call, LLMUnavailable    # noqa: E402
 from scripts import build_register          # noqa: E402
 
 ART_DIR = ROOT / "data/kb/articles"
 TKT_DIR = ROOT / "data/kb/tickets"
 LOG = ROOT / "data/generation_log.jsonl"
+ARTICLE_MAX_TOKENS = 1000   # 450 words is ~600 tokens; the cap also keeps Groq from reserving its full output budget
+TICKET_MAX_TOKENS = 450
+
+
+def tokens() -> dict:
+    return {"prompt_tokens": last_call.get("prompt_tokens"), "completion_tokens": last_call.get("completion_tokens")}
 DEFAULT_AUTHORITY = {"article": 1, "policy": 1, "release_note": 2, "ticket": 4, "community": 5}
 
 
@@ -121,13 +127,13 @@ def gen_article(spec: dict, prompts: dict) -> dict:
         text, prov = None, None
         for attempt in range(3):
             try:
-                out, provider = chat(system, user, temperature=0.4)
+                out, provider = chat(system, user, temperature=0.4, max_tokens=ARTICLE_MAX_TOKENS)
             except LLMUnavailable as e:
                 log({"id": spec["source_id"], "attempt": attempt, "provider": None, "problems": [str(e)]})
                 break
             out = re.sub(r"^```(?:markdown)?\s*|\s*```$", "", out.strip())
             problems = check_article(out, spec)
-            log({"id": spec["source_id"], "attempt": attempt, "provider": provider, "problems": problems})
+            log({"id": spec["source_id"], "attempt": attempt, "provider": provider, "problems": problems, **tokens()})
             if not problems:
                 text, prov = out + "\n", f"LLM:{provider},prompt:" + prompt_name
                 break
@@ -150,10 +156,10 @@ def gen_ticket(spec: dict, system: str, user_t: str) -> dict:
                     tone=", clearly frustrated and mentioning repeated contact" if angry else "")
         for attempt in range(3):
             try:
-                out, provider = chat(system, user, json_mode=True, temperature=0.6)
+                out, provider = chat(system, user, json_mode=True, temperature=0.6, max_tokens=TICKET_MAX_TOKENS)
                 body = json.loads(out)
                 missing = [k for k in ("subject", "customer_question", "resolution", "tags") if k not in body]
-                log({"id": spec["source_id"], "attempt": attempt, "provider": provider, "problems": missing})
+                log({"id": spec["source_id"], "attempt": attempt, "provider": provider, "problems": missing, **tokens()})
                 if not missing:
                     prov = f"LLM:{provider},prompt:kb_gen_ticket"
                     break
@@ -221,6 +227,8 @@ def main():
         print("ticket ", spec["source_id"], rows[-1]["provenance"])
     write_article_plan()
     print(f"\n{len(W.ARTICLES)} articles, {len(W.TICKETS)} tickets")
+    for name, u in USAGE.items():
+        print(f"tokens {name}: {u['calls']} calls, {u['prompt_tokens']} in, {u['completion_tokens']} out")
     build_register.main()
 
 

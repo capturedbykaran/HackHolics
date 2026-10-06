@@ -61,6 +61,7 @@ EDGE = [
     ("A1011", "Granite Peak Health Tech", "Enterprise", "active", "4.3", "normal", "USD"),
     ("A1012", "Lumen Ferry Tours", "Pro", "cancelled", "4.1", "normal", "USD"),
 ]
+BATCH = 8                       # accounts per LLM call
 LEVEL_FRACTION = {"low": (0.05, 0.3), "medium": (0.3, 0.75), "high": (0.75, 0.98)}
 
 
@@ -88,21 +89,29 @@ def llm_accounts(n: int, log: list) -> list[GenAccount]:
         return out
 
     text = (ROOT / "prompts/accounts_gen.txt").read_text(encoding="utf-8")
-    system, user = text.split("USER:", 1)
-    system, user = system.replace("SYSTEM:", "").strip(), user.strip().replace("{n}", str(n))
-    for attempt in range(3):
+    system, user_t = text.split("USER:", 1)
+    system, user_t = system.replace("SYSTEM:", "").strip(), user_t.strip()
+    # small batches: each call stays far below free-tier output limits (Groq qwen: 1,000 tokens/min)
+    valid: list[GenAccount] = []
+    seen = {e[1].lower() for e in EDGE}
+    failures = 0
+    while len(valid) < n and failures < 4:
+        k = min(BATCH, n - len(valid))
+        user = user_t.replace("{n}", str(k))
+        if len(seen) > len(EDGE):
+            user += "\nDo not reuse these company names: " + ", ".join(sorted(seen)[-40:])
         try:
-            raw, provider = chat(system, user, json_mode=True, temperature=0.8)
+            raw, provider = chat(system, user, json_mode=True, temperature=0.8, max_tokens=60 * k + 150)
         except LLMUnavailable as e:
-            log.append({"attempt": attempt, "error": str(e)})
+            log.append({"batch": len(log), "error": str(e)})
             break
-        valid, rejected = [], []
+        rejected, before = [], len(valid)
         try:
             items = json.loads(raw).get("accounts", [])
-        except json.JSONDecodeError as e:
-            log.append({"attempt": attempt, "provider": provider, "error": f"bad JSON: {e}"})
+        except (json.JSONDecodeError, AttributeError) as e:
+            log.append({"batch": len(log), "provider": provider, "error": f"bad JSON: {e}"})
+            failures += 1
             continue
-        seen = {e[1].lower() for e in EDGE}
         for item in items:
             try:
                 a = GenAccount.model_validate(item)
@@ -117,9 +126,11 @@ def llm_accounts(n: int, log: list) -> list[GenAccount]:
                 continue
             seen.add(a.company_name.lower())
             valid.append(a)
-        log.append({"attempt": attempt, "provider": provider, "requested": n, "valid": len(valid), "rejected": rejected})
-        if len(valid) >= n * 0.8:
-            return valid[:n]
+        log.append({"batch": len(log), "provider": provider, "requested": k, "valid": len(valid) - before,
+                    "rejected": rejected})
+        failures += len(valid) == before
+    if len(valid) >= n * 0.8:
+        return valid[:n]
     raise SystemExit("LLM account generation failed; see data/seed/generation_log.json or use GEN_MOCK=true")
 
 

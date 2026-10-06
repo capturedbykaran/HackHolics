@@ -56,6 +56,14 @@ checks the output contains every required fact and section. Failures are fed bac
 logged in `data/generation_log.jsonl`. Articles, `plan_limits`, `policy_registry` and tool
 behaviour can never contradict each other.
 
+**Free-tier token discipline** (`scripts/gen_llm.py`). Order is Groq (`qwen/qwen3.8-27b`) then Gemini
+(`gemini-3.5-flash`); Ollama only if added to `GEN_LLM_ORDER`. Every call sends `max_tokens` (articles 1,000,
+tickets 450, accounts 60 per row in batches of 8), because Groq otherwise reserves the model's whole output
+budget and answers 429 (qwen's free tier allows 1,000 output tokens/min). Hidden reasoning is off on both
+providers (on Gemini Flash this cut an article from 2,603 to 623 tokens). A rolling 60 s budget per provider sends
+each call to the first provider with room, and waits only when none has room. Token use per attempt goes to
+`data/generation_log.jsonl`.
+
 **Designed conflicts** (listed in `data/article_plan.json`):
 - Version-specific articles: run export (3.x vs 4.2+), API auth (legacy key vs scoped token), webhook signing (SHA1 vs SHA256).
 - 4 outdated tickets that contradict current docs (e.g. TKT-2025-0311 "add a Delay step" vs KB-TS-002).
