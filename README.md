@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-# HackHolics
-HCL hackathon
-first commit
-=======
 # InsightDesk
 
 HackHolics team submission for the HCL hackathon.
@@ -50,4 +45,3 @@ _TODO_
 ## Limitations
 
 _TODO_
->>>>>>> b89b6bece3fbe5b02530189ce9b62c0ae8a78be7
