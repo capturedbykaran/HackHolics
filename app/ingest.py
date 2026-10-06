@@ -29,7 +29,9 @@ from datetime import date, datetime, timezone
 from typing import Literal
 
 import yaml
+from pathlib import Path
 from pydantic import BaseModel, Field, field_validator
+
 
 from app import store
 from app import db
@@ -352,6 +354,37 @@ def _prepare(body: str, m: SourceMeta) -> tuple[list[str], list[str], list[str],
     return ids, docs, embed_texts, metas, {"flagged_chunks": flagged}
 
 
+def _infer_doc_type(source_id: str) -> str:
+    s = source_id.upper()
+    if s.startswith("KB-POL") or "POLICY" in s:
+        return "policy"
+    if s.startswith("RN-") or "RELEASE" in s:
+        return "release_note"
+    if s.startswith("TKT-") or "TICKET" in s:
+        return "ticket"
+    return "article"
+
+
+def _extract_title(body: str, default: str) -> str:
+    m = re.search(r"^#\s+(.+)$", body, flags=re.M)
+    return m.group(1).strip() if m else default
+
+
+def _markdown_meta(fm: dict, meta: dict | None, filename: str, body: str) -> dict:
+    m = {**fm, **(meta or {})}
+    stem = Path(filename).stem
+    clean_stem = re.sub(r"[^A-Za-z0-9._-]", "-", stem)
+    if len(clean_stem) < 3:
+        clean_stem = f"DOC-{clean_stem}"
+    m.setdefault("source_id", clean_stem)
+    m.setdefault("doc_type", _infer_doc_type(m["source_id"]))
+    m.setdefault("title", _extract_title(body, stem.replace("-", " ").replace("_", " ").title()))
+    m.setdefault("authority_level", DEFAULT_AUTHORITY.get(m["doc_type"], 1))
+    m.setdefault("product_versions", "ALL")
+    m.setdefault("last_updated", date.today().isoformat())
+    return m
+
+
 def _parse(content: bytes, filename: str, meta: dict | None) -> list[tuple[dict, str]]:
     """-> [(metadata, markdown body)]; a .json file may hold one ticket or a list of tickets."""
     try:
@@ -367,8 +400,9 @@ def _parse(content: bytes, filename: str, meta: dict | None) -> list[tuple[dict,
         return [(ticket_meta(t, meta), ticket_to_markdown(t)) for t in tickets]
     if name.endswith(TEXT_EXTS):
         fm, body = split_front_matter(raw)
-        return [({**fm, **(meta or {})}, body)]       # explicit metadata wins over front matter
+        return [(_markdown_meta(fm, meta, filename, body), body)]       # explicit metadata wins over front matter
     raise ValueError("unsupported file type: upload .md, .markdown, .txt or .json")
+
 
 
 def ingest_document(content: bytes, filename: str, meta: dict | None = None, *, dry_run: bool = False) -> dict:
