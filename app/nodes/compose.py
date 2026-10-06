@@ -7,9 +7,15 @@ from typing import Any
 
 from app import llm
 from app.guard import redact
+from app.guardrails import escape_tags, make_event, wrap_data
+from app.nodes.classify import format_history
 from app.schemas import Chunk, ComposerCitation, ComposerOut, ToolResult
 
 MAX_CHUNK_CHARS = 1500
+COMPOSE_HISTORY_TURNS = 4  # short continuity context; facts still need a SOURCE or TOOL RESULT
+NEW_CUSTOMER_NOTE = ("The customer signed up recently. If a SOURCE contains a getting-started tip that "
+                     "is relevant to the question, add ONE such tip at the end, cited like any other fact. "
+                     "Never add a tip that is not in the SOURCES.")
 
 
 def _fmt_chunks(chunks: list[Chunk]) -> str:
@@ -17,7 +23,7 @@ def _fmt_chunks(chunks: list[Chunk]) -> str:
         return "(none)"
     parts = []
     for i, c in enumerate(chunks, 1):
-        text, _ = redact(c.text[:MAX_CHUNK_CHARS])
+        text = escape_tags(redact(c.text[:MAX_CHUNK_CHARS])[0])  # retrieved text is DATA
         parts.append(f"[{i}] source_id={c.source_id} | section={c.section} | type={c.doc_type} | "
                      f"versions={c.product_versions} | updated={c.last_updated}\n{text}")
     return "\n\n".join(parts)
@@ -27,7 +33,7 @@ def _fmt_tools(results: list[ToolResult]) -> str:
     if not results:
         return "(none)"
     text, _ = redact(json.dumps([r.model_dump() for r in results], default=str))  # e.g. owner_email
-    return text
+    return escape_tags(text)
 
 
 def _fmt_upcoming(upcoming: list[Chunk]) -> str:
@@ -56,11 +62,18 @@ def compose_node(state: dict) -> dict:
         feedback = ("\nREVISION: a reviewer rejected your previous draft. Fix these issues and use "
                     "only the sources: " + "; ".join(prev_critic.issues) + "\n")
 
-    system = llm.render(llm.load_prompt("composer.txt"),
-                        version=state.get("version") or "unknown", revision_feedback=feedback)
+    segment_note = NEW_CUSTOMER_NOTE if state.get("customer_segment") == "new_customer" else ""
+    system = llm.render(llm.load_prompt("composer.txt"), version=state.get("version") or "unknown",
+                        revision_feedback=feedback, segment_note=segment_note)
+    history = state.get("history", [])[-COMPOSE_HISTORY_TURNS:]
+    history_block = wrap_data("conversation_history", format_history(history)) + "\n\n" if history else ""
+    cls = state.get("classifier")
+    question = (f"Question to answer (follow-up rewritten as a full question): {cls.standalone_question}\n\n"
+                if cls and cls.standalone_question else "")
     user = (f"SOURCES:\n{_fmt_chunks(chunks)}\n\nTOOL RESULTS:\n{_fmt_tools(tools)}\n\n"
             f"UPCOMING CHANGES:\n{_fmt_upcoming(state.get('upcoming', []))}\n\n"
-            f"<customer_message>\n{state['redacted_message']}\n</customer_message>")
+            f"{history_block}{question}"
+            f"{wrap_data('customer_message', state['redacted_message'])}")
 
     failures = list(state.get("failures", []))
     try:
@@ -70,8 +83,16 @@ def compose_node(state: dict) -> dict:
         draft = ComposerOut(answer="", can_answer=False, missing_info=["llm_unavailable"])
         failures.append("compose_llm_failed")
 
+    before, was_answerable = len(draft.citations), draft.can_answer
     draft = _validate_citations(draft, chunks, evidence_tools(state))
-    return {"draft": draft, "revisions": revisions, "failures": failures}
+    events = list(state.get("guardrail_events", []))
+    if before > len(draft.citations):
+        events.append(make_event("processing", "citation_dropped", "drop",
+                                 f"{before - len(draft.citations)} citation(s) not in retrieved sources"))
+    if was_answerable and not draft.can_answer:
+        events.append(make_event("processing", "no_valid_citation", "block",
+                                 "draft has no valid citation and no tool evidence"))
+    return {"draft": draft, "revisions": revisions, "failures": failures, "guardrail_events": events}
 
 
 def _validate_citations(draft: ComposerOut, chunks: list[Chunk], evidence: list[ToolResult]) -> ComposerOut:

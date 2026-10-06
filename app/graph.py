@@ -12,7 +12,9 @@ from datetime import date
 
 from langgraph.graph import END, StateGraph
 
-from app import audit, llm
+from app import audit, db, llm
+from app.guard import redact
+from app.guardrails import make_event
 from app.nodes.classify import classify_node
 from app.nodes.compose import compose_node
 from app.nodes.critic import critic_node
@@ -21,10 +23,14 @@ from app.nodes.finalize import finalize_node
 from app.nodes.gather import gather_node
 from app.nodes.guard import guard_node
 from app.schemas import ClassifierOut, Decision, GraphState, SupportRequest, SupportResponse
+from app.segment import segment_user
 
 log = logging.getLogger("insightdesk.graph")
 
 MAX_REVISIONS = 1
+MAX_HISTORY_TURNS = 6
+MAX_HISTORY_CHARS = 300
+RECURSION_LIMIT = 25  # a request visits at most ~10 nodes (7 + one revision loop); fail closed beyond that
 FAST_ESCALATE_INTENTS = {"complaint", "security"}  # no point drafting an answer for these
 
 
@@ -105,22 +111,56 @@ def get_graph():
     return _GRAPH
 
 
+# ------------------------------------------------------------------ memory
+def load_history(conversation_id: str | None, account_id: str | None) -> dict:
+    """Previous turns of this conversation, bound to one account (R8).
+
+    Turns are already PII-redacted when stored; they are redacted again here as a second line of defence.
+    """
+    if not conversation_id:
+        return {"history": [], "prior_user_turns": 0, "prior_escalations": 0}
+    turns = audit.get_conversation(conversation_id, limit=0)
+    if any(t.get("account_id") != account_id for t in turns):
+        return {"history": [], "prior_user_turns": 0, "prior_escalations": 0, "history_denied": True,
+                "early": "refused", "early_reason": "other_account"}
+    history = []
+    for t in turns[-MAX_HISTORY_TURNS:]:
+        text = t.get("message") if t.get("role") == "user" else t.get("answer")
+        history.append({"role": t.get("role"), "text": redact(text or "")[0][:MAX_HISTORY_CHARS],
+                        "answer_type": t.get("answer_type"), "intent": t.get("intent") or {}})
+    return {"history": history,
+            "prior_user_turns": sum(t.get("role") == "user" for t in turns),
+            "prior_escalations": sum(t.get("answer_type") == "escalated" for t in turns)}
+
+
 # ------------------------------------------------------------------ entry point
-def run_support(req: SupportRequest, account_id: str) -> SupportResponse:
+def run_support(req: SupportRequest, account_id: str | None = None) -> SupportResponse:
     llm.start_call_log()
     trace_id = audit.new_trace()
     conversation_id = req.conversation_id or f"C-{uuid.uuid4().hex[:6]}"
     as_of = req.as_of_date or date.today().isoformat()
-    init: dict = {"req": req, "account_id": account_id, "trace_id": trace_id,
-                  "conversation_id": conversation_id, "as_of_date": as_of,
-                  "failures": [], "latency_ms": {}, "revisions": 0,
-                  "chunks": [], "upcoming": [], "conflicts": [], "tool_results": []}
+    account_id = account_id or None
     try:
-        return get_graph().invoke(init)["response"]
+        registry = db.load_registry()
+    except Exception:  # noqa: BLE001
+        registry = {}
+    segment, _ = segment_user(account_id, as_of, registry)
+    init: dict = {"req": req, "account_id": account_id, "trace_id": trace_id,
+                  "conversation_id": conversation_id, "as_of_date": as_of, "customer_segment": segment,
+                  "failures": [], "latency_ms": {}, "revisions": 0, "signals": [],
+                  "chunks": [], "upcoming": [], "conflicts": [], "tool_results": [],
+                  "guardrail_events": [],
+                  **load_history(req.conversation_id, account_id)}
+    if init.get("history_denied"):
+        init["guardrail_events"].append(make_event("input", "conversation_ownership", "refuse",
+                                                  "conversation belongs to another account"))
+    try:
+        return get_graph().invoke(init, {"recursion_limit": RECURSION_LIMIT})["response"]
     except Exception:  # noqa: BLE001  - last-resort safety net
         log.exception("run_support failed")
         return SupportResponse(
             trace_id=trace_id, conversation_id=conversation_id, answer_type="not_found",
             answer="Sorry, something went wrong on our side and I could not process this request. "
                    "Please try again in a moment.",
-            intent=ClassifierOut(type="out_of_scope", confidence=0.0), as_of_date=as_of)
+            intent=ClassifierOut(type="out_of_scope", confidence=0.0), as_of_date=as_of,
+            customer_segment=segment)

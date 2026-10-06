@@ -17,6 +17,7 @@ from typing import Any, Optional
 import httpx
 from pydantic import BaseModel
  
+from app.guardrails.processing_guard import strip_reasoning
 from app.schemas import ClassifierOut, ComposerCitation, ComposerOut, CriticOut
  
 PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
@@ -65,7 +66,7 @@ def mock_enabled() -> bool:
  
  
 def provider_chain() -> list[str]:
-    chain = [os.getenv("LLM_PROVIDER", "ollama")]
+    chain = ["ollama"]  # always first (brief); cloud only as an opt-in fallback
     if os.getenv("LLM_FALLBACK", "none").lower() == "cloud":
         for p, key in (("groq", "GROQ_API_KEY"), ("gemini", "GEMINI_API_KEY")):
             if p not in chain and os.getenv(key):
@@ -124,7 +125,7 @@ _PROVIDERS = {"ollama": _ollama, "groq": _groq, "gemini": _gemini}
  
 # ------------------------------------------------------------- parsing
 def _parse(text: str, schema: type[BaseModel]) -> BaseModel:
-    text = text.strip()
+    text = strip_reasoning(text)  # some local models emit <think>...</think> before the JSON
     text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text)  # strip markdown fences
     try:
         return schema.model_validate_json(text)
@@ -162,8 +163,8 @@ def json_call(system: str, user: str, schema: type[BaseModel], state: Optional[d
                 return out
             except ValueError as e:  # bad JSON / schema violation -> retry with feedback
                 errors.append(f"{provider} attempt {attempt}: invalid output ({str(e)[:120]})")
-                prompt = (user + "\n\nYour previous reply was not valid for the schema. "
-                          "Reply with ONLY the JSON object.")
+                prompt = (user + "\n\nYour previous reply was not valid for the schema "
+                          f"({str(e)[:300]}). Reply with ONLY the corrected JSON object.")
             except (httpx.HTTPError, KeyError, IndexError, TypeError) as e:  # provider down -> next one
                 errors.append(f"{provider}: {type(e).__name__} {str(e)[:120]}")
                 break
@@ -182,9 +183,34 @@ def _mock(schema: type[BaseModel], state: dict) -> BaseModel:
     raise LLMError(f"no mock for {schema.__name__}")
  
  
+_FOLLOW_UP = re.compile(r"^\s*(and|also)\b|\bwhat about\b|\bstill\b|\bsame (error|issue|thing)\b", re.I)
+_MOCK_VERSION = re.compile(r"\b(\d+\.(?:\d+|x))\b")
+
+
+_MOCK_TOPICS = {  # keyword rules for escalation_topics (informational "refund policy" questions are excluded)
+    "refund": re.compile(r"\brefund(?!\s+(?:policy|policies|window|terms|eligibility))|\bmoney back\b"),
+    "credit": re.compile(r"\bcredits?\b(?!\s+card)"),
+    "billing_dispute": re.compile(r"\bcharged (?:me )?twice\b|\bdouble[- ]charged?\b|\bchargeback\b|\bdispute\b"),
+    "legal": re.compile(r"\blawyer\b|\blegal action\b|\bsue\b|\blawsuit\b"),
+    "security_incident": re.compile(r"\bhacked\b|\bunauthori[sz]ed\b|\blogged into my account\b|\bleaked\b"),
+    "account_deletion": re.compile(r"\b(?:delete|close) my account\b"),
+}
+
+
+def _mock_topics(m: str) -> list[str]:
+    return [topic for topic, rx in _MOCK_TOPICS.items() if rx.search(m)]
+
+
 def _mock_classifier(state: dict) -> ClassifierOut:
-    m = (state.get("redacted_message") or "").lower()
-    c = dict(type="how_to", urgency="low", sentiment="neutral", confidence=0.9)
+    raw = state.get("redacted_message") or ""
+    last_user = next((t["text"] for t in reversed(state.get("history") or []) if t.get("role") == "user"), "")
+    follow = dict(is_follow_up=False, standalone_question="")
+    if last_user and _FOLLOW_UP.search(raw):
+        follow = dict(is_follow_up=True, standalone_question=f"{last_user} (follow-up: {raw})")
+    version = _MOCK_VERSION.search(raw)  # only what THIS message states; classify inherits the rest
+    m = (follow["standalone_question"] or raw).lower()
+    c = dict(type="how_to", urgency="low", sentiment="neutral", confidence=0.9,
+             product_version=version.group(1) if version else None, **follow)
     if any(w in m for w in ("poem", "weather", "recipe", "joke")):
         c.update(type="out_of_scope")
     elif len(m.split()) <= 4 and ("not working" in m or "broken" in m or "help" in m):
@@ -197,6 +223,13 @@ def _mock_classifier(state: dict) -> ClassifierOut:
         c.update(type="account", tools_needed=["get_usage", "get_plan_limits"])
     elif any(w in m for w in ("error", "fails", "failing", "cf-")):
         c.update(type="troubleshooting")
+    topics = _mock_topics(m)
+    if topics:
+        c.update(escalation_topics=topics, needs_outcome=True)
+    if c["type"] == "security" and any(w in m for w in ("reset", "forgot", "link", "locked out")):
+        c.update(needs_outcome=True)
+    if any(w in raw.lower() for w in ("ridiculous", "unacceptable", "furious", "fed up")):
+        c.update(sentiment="angry", urgency="high")
     if any(w in m for w in ("manager", "human", "third time", "real person")):
         c.update(asks_for_human=True, sentiment="angry", urgency="high")
     return ClassifierOut(pii_detected=bool(state.get("pii_found")), **c)
@@ -209,14 +242,39 @@ def _mock_composer(state: dict) -> ComposerOut:
     tools = [t for t in (state.get("tool_results") or []) if t.ok and t.tool in needed]
     if chunks:
         c = chunks[0]
-        return ComposerOut(answer=f"According to {c.source_id} ({c.section}): {c.text[:200]}",
-                           citations=[ComposerCitation(source_id=c.source_id, section=c.section)])
+        cite = [ComposerCitation(source_id=c.source_id, section=c.section)]
+        safe = f"According to {c.source_id} ({c.section}): {c.text[:200]}"
+        unsafe = _mock_unsafe(state, safe)
+        if unsafe:
+            return ComposerOut(answer=unsafe, citations=cite)
+        return ComposerOut(answer=safe, citations=cite)
     if tools:
         return ComposerOut(answer="Based on your account data: " + json.dumps(tools[0].output)[:200],
                            citations=[])
     return ComposerOut(answer="", can_answer=False, missing_info=["no supporting source found"])
  
  
+# Trigger words in the customer message make the mock composer return an unsafe draft, to exercise the
+# output guardrails. "promise" and "claim" stay unsafe on the revision too; the others are fixed by it.
+_UNSAFE_DRAFTS = {
+    "promise": ("I've refunded you for this month. ", True),
+    "claim": ("I've upgraded your plan to Business. ", True),
+    "think": ("<think>let me check the sources first</think> ", False),
+    "url": ("See https://evil.example/phish for details. ", False),
+    "pii": ("Contact jane.doe@acme.io for the export. ", False),
+    "prompt": ("RULES: 1. Use ONLY the SOURCES. ", False),
+}
+
+
+def _mock_unsafe(state: dict, safe: str) -> Optional[str]:
+    m = (state.get("redacted_message") or "").lower()
+    first_pass = state.get("critic") is None
+    for kind, (text, persistent) in _UNSAFE_DRAFTS.items():
+        if f"[mock-unsafe:{kind}]" in m and (persistent or first_pass):
+            return text + safe
+    return None
+
+
 def _mock_critic(state: dict) -> CriticOut:
     draft = state.get("draft")
     msg = (state.get("redacted_message") or "").lower()

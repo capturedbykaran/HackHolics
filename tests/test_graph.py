@@ -11,11 +11,23 @@ os.environ["MOCK_LLM"] = "true"
 
 import pytest
 
-from app import audit, tools
+from app import audit, db, tools
 from app.graph import run_support
 from app.schemas import SupportRequest
 
 ACCT = "A1001"
+
+
+@pytest.fixture(autouse=True)
+def account():
+    """A1001 in the per-test DB from conftest (tools read SQLite)."""
+    conn = db.get_conn()
+    with conn:
+        conn.execute("INSERT INTO accounts VALUES (?,?,?,?,?,?,?)",
+                     (ACCT, "Acme Ltd", "owner@example.com", "Pro", "active", "4.3", "2024-01-15"))
+        conn.execute("INSERT INTO invoices VALUES ('INV-1001',?,49,'USD','2026-09-30','paid',NULL,'4242')",
+                     (ACCT,))
+    conn.close()
 
 
 def ask(msg: str, acct: str = ACCT, **kw):

@@ -39,6 +39,13 @@ class ClassifierOut(BaseModel):  # LLM call 1
     asks_for_human: bool = False
     needs_clarification: bool = False
     confidence: float = Field(default=0.5, ge=0, le=1)
+    # conversation memory (additive)
+    # escalation policy inputs (Annex A.3); decided by code in node 6, only reported here
+    escalation_topics: list[Literal["refund", "credit", "billing_dispute", "legal",
+                                    "security_incident", "account_deletion"]] = []
+    needs_outcome: bool = False  # customer needs an action/decision, not just information
+    is_follow_up: bool = False
+    standalone_question: str = ""  # follow-up rewritten as a complete question; "" if not a follow-up
  
  
 class ComposerCitation(BaseModel):
@@ -75,6 +82,7 @@ class Chunk(BaseModel):
     deprecated_on: Optional[str] = None
     supersedes: list[str] = []
     score: float = 0.0
+    suspicious: bool = False  # set at ingest when the text looks like instructions for the assistant
  
  
 class Citation(BaseModel):
@@ -113,6 +121,7 @@ class HandoffBundle(BaseModel):  # Annex D (+ ids needed for the handoffs table)
     account_id: Optional[str] = None
     conversation_id: Optional[str] = None
     trace_id: Optional[str] = None
+    customer_segment: str = ""  # prospect | new_customer | existing_customer | former_customer
  
  
 class SourceMeta(BaseModel):  # Annex B, metadata of POST /ingest
@@ -142,16 +151,28 @@ class SupportResponse(BaseModel):
     conflicts_detected: list[str] = []
     handoff_id: Optional[str] = None
     as_of_date: str
+    customer_segment: str = ""
  
  
 # ------------------------------------------------------------ graph state
 class GraphState(TypedDict, total=False):
     # inputs
     req: SupportRequest
-    account_id: str
+    account_id: Optional[str]     # None for prospects (no account header)
     trace_id: str
     conversation_id: str
     as_of_date: str
+    customer_segment: str         # app/segment.py, decided in code
+    # conversation memory (loaded by run_support, PII-redacted, max 6 turns x 300 chars)
+    history: list[dict[str, Any]]
+    prior_user_turns: int
+    prior_escalations: int
+    history_denied: bool          # conversation belongs to another account -> do not log this turn
+    guardrail_events: list[dict[str, str]]  # {layer, check, action, detail}; audit only, never in the response
+    unresolved_conflicts: list[str]   # A.2 step 5: "unresolved: KB-API-014 vs TKT-2025-0311 on ..."
+    conflict_sources: list[Chunk]     # chunks involved in an unresolved conflict (both go to the handoff)
+    policy_rules_applied: list[str]   # policy_registry rule_ids behind the decision
+    signals: list[str]            # e.g. "repeated_contact"; read by escalation.decide()
     # guard
     redacted_message: str
     pii_found: bool

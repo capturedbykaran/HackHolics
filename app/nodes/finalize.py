@@ -15,6 +15,8 @@ from typing import Any
 
 from app import audit, llm
 from app.guard import redact
+from app.guardrails import (check_output, make_event, sanitize_audit_state, sanitize_bundle,
+                            sanitize_response)
 from app.schemas import (Chunk, Citation, ClassifierOut, Decision, HandoffBundle, SupportResponse,
                          ToolResult)
 from app import tools
@@ -28,7 +30,12 @@ REFUSED = {
                       "owner can contact us directly."),
     "secret": ("For your security I can't display or repeat passwords, tokens, keys or reset links "
                "in chat. I can start the secure reset flow for your own account instead."),
+    "sign_in_required": ("I can answer general questions about CloudFlow, but questions about an account, "
+                         "billing, usage or security need you to be signed in. Please sign in to your "
+                         "CloudFlow account, or create one, and ask again."),
 }
+NEW_CUSTOMER_ESCALATION = (" Since you're new to CloudFlow, feel free to add any setup questions when "
+                           "the team replies.")
 CLARIFY = ("I want to help, but I need a bit more detail. Could you tell me which feature or workflow "
            "this is about, the exact error message or code you see, and which CloudFlow version you use?")
 OUT_OF_SCOPE = ("I can only help with CloudFlow product support, such as workflows, integrations, API "
@@ -49,7 +56,8 @@ ESCALATION = {
 }
 
 
-def _escalation_text(reasons: list[str], cls: ClassifierOut, handoff_id: str, sla: str) -> str:
+def _escalation_text(reasons: list[str], cls: ClassifierOut, handoff_id: str, sla: str,
+                     segment: str = "") -> str:
     r = set(reasons)
     if r & {"refund_request", "credit_request", "billing_dispute", "billing", "legal_matter"} \
             or cls.type == "billing":
@@ -62,6 +70,8 @@ def _escalation_text(reasons: list[str], cls: ClassifierOut, handoff_id: str, sl
     else:
         key = "default"
     text = ESCALATION[key]
+    if segment == "new_customer":
+        text += NEW_CUSTOMER_ESCALATION
     if sla:
         text += f" {sla}"
     return f"{text} (Reference: {handoff_id})"
@@ -123,7 +133,7 @@ def _unresolved(cls: ClassifierOut, draft, reasons: list[str]) -> list[str]:
 
 
 def _build_handoff(state: dict, cls: ClassifierOut, reasons: list[str], draft, chunks: list[Chunk],
-                   tool_results: list[ToolResult]) -> HandoffBundle:
+                   tool_results: list[ToolResult], withhold_draft: bool = False) -> HandoffBundle:
     queue, priority = _queue_priority(cls, reasons)
     evidence: list[dict] = [{"tool": t.tool, "ok": t.ok, "output": t.output, "error": t.error}
                             for t in tool_results]
@@ -131,13 +141,15 @@ def _build_handoff(state: dict, cls: ClassifierOut, reasons: list[str], draft, c
     msg = state.get("redacted_message", "")
     summary = f"Customer ({cls.type}, {cls.sentiment}, urgency {cls.urgency}) wrote: {msg[:300]}"
     attempted = redact(draft.answer)[0] if draft and draft.answer else None
-    return HandoffBundle(
+    if withhold_draft:  # an unsafe draft is never copied into the bundle; the reasons say why
+        attempted = "[withheld by output guardrail]"
+    return sanitize_bundle(HandoffBundle(
         queue=queue, priority=priority, intent=cls.type, urgency=cls.urgency, sentiment=cls.sentiment,
         escalation_reasons=reasons or ["unspecified"], customer_summary=summary,
         evidence=_redact_obj(evidence), attempted_answer=attempted,
         unresolved_questions=_unresolved(cls, draft, reasons), pii_redacted=True,
-        account_id=state["account_id"], conversation_id=state["conversation_id"],
-        trace_id=state["trace_id"])
+        account_id=state.get("account_id"), conversation_id=state["conversation_id"],
+        trace_id=state["trace_id"], customer_segment=state.get("customer_segment", "")))
 
 
 # ----------------------------------------------------------------- node
@@ -150,6 +162,8 @@ def finalize_node(state: dict) -> dict:
     early = state.get("early")
     handoff_id = None
     citations: list[Citation] = []
+    events: list[dict] = list(state.get("guardrail_events", []))
+    problems: list[str] = []  # output-guardrail codes found in the draft
 
     if early == "refused":
         answer_type, answer = "refused", REFUSED.get(state.get("early_reason") or "", REFUSED["other_account"])
@@ -160,8 +174,16 @@ def finalize_node(state: dict) -> dict:
     else:
         action = decision.action if decision else "escalate"
         reasons = list(decision.reasons) if decision else ["decision_missing"]
+        if draft and draft.answer.strip():
+            problems = check_output(draft.answer, state)  # layer 3: last look, whatever the critic said
         if action == "revise":  # revision budget exhausted -> treat as escalation
             action, reasons = "escalate", reasons + ["revision_limit_reached"]
+        if problems and action in ("answer", "escalate"):
+            # never send an unsafe draft: escalate, and say which check failed
+            action = "escalate"
+            reasons = reasons + [f"output_guardrail_{c}" for c in problems
+                                 if f"output_guardrail_{c}" not in reasons]
+            events.append(make_event("output", "output_check", "escalate", ",".join(problems)))
         if action == "answer" and draft and draft.answer.strip():
             answer_type, answer = "answered", redact(draft.answer)[0]
             citations = _citations(draft, chunks)
@@ -169,9 +191,11 @@ def finalize_node(state: dict) -> dict:
             answer_type, answer = "not_found", NOT_FOUND
         else:
             answer_type = "escalated"
-            bundle = _build_handoff(state, cls, reasons, draft, chunks, tool_results)
+            bundle = _build_handoff(state, cls, reasons, draft, chunks, tool_results,
+                                    withhold_draft=bool(problems))
             handoff_id = tools.create_handoff(bundle)
-            answer = _escalation_text(reasons, cls, handoff_id, sla="")  # no SLA promise unless a human approved one
+            answer = _escalation_text(reasons, cls, handoff_id, sla="",  # no SLA promise unless a human approved one
+                                      segment=state.get("customer_segment", ""))
 
     response = SupportResponse(
         trace_id=state["trace_id"], conversation_id=state["conversation_id"],
@@ -182,20 +206,29 @@ def finalize_node(state: dict) -> dict:
                  "decision": decision.action if decision else None,
                  "revisions": state.get("revisions", 0)} if critic else None),
         conflicts_detected=state.get("conflicts", []), handoff_id=handoff_id,
-        as_of_date=state["as_of_date"])
+        as_of_date=state["as_of_date"], customer_segment=state.get("customer_segment", ""))
+    cleaned = sanitize_response(response, state)  # layer 3: final pass on EVERY path, templates included
+    if cleaned.answer != response.answer:
+        events.append(make_event("output", "response_sanitized", "redact", "answer changed by the final pass"))
+    response = cleaned
+    answer = response.answer
 
     # ---- audit (never allowed to break the response)
     calls = llm.get_call_log()
     audit_state = {**state, "response": response, "llm_calls": calls,
                    "model": ",".join(sorted({c["model"] for c in calls})) or "none",
-                   "tokens": sum(c["tokens"] for c in calls),
+                   "tokens": sum(c["tokens"] for c in calls), "guardrail_events": events,
                    "decision": decision, "handoff_id": handoff_id}
+    audit_state = sanitize_audit_state(audit_state, withheld_codes=problems or None)
     try:
         audit.write_audit(audit_state)
-        audit.append_conversation(state["conversation_id"], "user",
-                                  {"message": state.get("redacted_message", ""), "trace_id": state["trace_id"]})
-        audit.append_conversation(state["conversation_id"], "assistant",
-                                  {"answer_type": answer_type, "answer": answer, "trace_id": state["trace_id"]})
+        if not state.get("history_denied"):  # never write into another account's conversation
+            turn = {"account_id": state.get("account_id"), "trace_id": state["trace_id"],
+                    "intent": cls.model_dump()}
+            audit.append_conversation(state["conversation_id"], "user",
+                                      {**turn, "message": state.get("redacted_message", "")})
+            audit.append_conversation(state["conversation_id"], "assistant",
+                                      {**turn, "answer_type": answer_type, "answer": answer})
     except Exception:  # noqa: BLE001
         log.exception("audit write failed")
-    return {"response": response, "llm_calls": calls}
+    return {"response": response, "llm_calls": calls, "guardrail_events": events}
