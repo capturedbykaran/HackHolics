@@ -149,10 +149,18 @@ def date_int(s: str, default: int) -> int:
 
 # ---------------------------------------------------------------- 2. parse
 def split_front_matter(text: str) -> tuple[dict, str]:
-    if text.startswith("---"):
-        _, fm, body = text.split("---", 2)
-        return yaml.safe_load(fm) or {}, body.strip()
+    text_clean = text.lstrip("\ufeff \t\r\n")
+    if text_clean.startswith("---"):
+        parts = text_clean.split("---", 2)
+        if len(parts) >= 3:
+            fm_text, body = parts[1], parts[2]
+            try:
+                fm = yaml.safe_load(fm_text) or {}
+                return fm, body.strip()
+            except Exception:
+                pass
     return {}, text.strip()
+
 
 
 def ticket_to_markdown(t: dict) -> str:

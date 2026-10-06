@@ -32,7 +32,9 @@ async def ingest(file: UploadFile = File(...), metadata: str | None = Form(None)
     if len(content) > MAX_BYTES:
         raise HTTPException(413, "File larger than 2 MB")
     try:
-        meta = json.loads(metadata) if metadata else None
+        meta = None
+        if metadata and metadata.strip():
+            meta = json.loads(metadata.strip())
         if meta is not None and not isinstance(meta, dict):
             raise HTTPException(400, "metadata must be a JSON object")
         # embedding is CPU-bound: run it off the event loop so /support stays responsive
@@ -44,6 +46,7 @@ async def ingest(file: UploadFile = File(...), metadata: str | None = Form(None)
                                   "details": json.loads(e.json())})
     except ValueError as e:
         raise HTTPException(422, str(e))
+
 
 
 SOURCES_SQL = """SELECT r.*, s.chunks, s.content_hash, s.flags, s.embedder, s.ingested_at

@@ -37,3 +37,11 @@ def append_conversation(conversation_id: str, role: str, payload: dict) -> None:
 def get_conversation(conversation_id: str, limit: int = 6) -> list[dict]:
     turns = CONVERSATIONS.get(conversation_id, [])
     return [dict(t) for t in (turns[-limit:] if limit > 0 else turns)]
+
+
+def get_audit(trace_id: str) -> dict | None:
+    for rec in reversed(AUDIT):
+        if rec.get("trace_id") == trace_id:
+            return rec
+    return None
+
